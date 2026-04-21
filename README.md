@@ -51,6 +51,6 @@ python scripts/paint_energy_distribution.py
 ## 参数配置说明
 本项目的核心仿真参数通过 `resources/config.json` 进行管理，修改此文件无需重新编译代码。核心配置项说明：
 - `sim_config`: 设置总光线数、CUDA Block Size、Grid 策略等。
-- `trough_config`: 设置抛物面的焦距、长度、宽度及子镜拼接边界。
-- `absorber_config`: 集热管的几何参数（如内/外径尺寸）、吸收率及玻璃罩套管的光学属性。
-- `sun_shape`: 选择太阳模型（Buie/Gaussian等）以及误差角。
+- `trough_config`: 设置抛物面的焦距、长度、宽度、镜面误差及子镜拼接边界。
+- `absorber_config`: 集热管的几何参数（如内径、长度尺寸、空间坐标等）。
+- `sun_shape`: 选择太阳模型（Buie/Gaussian等）以及对应模型的误差角。
