@@ -22,4 +22,4 @@ struct ParabolicTroughConfig {
 
 extern __constant__ ParabolicTroughConfig d_trough_config;
 
-void loadTroughConfigToGPU(const std::string& filepath);
+ParabolicTroughConfig loadTroughConfigToGPU(const std::string& filepath);

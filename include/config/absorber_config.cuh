@@ -12,4 +12,4 @@ struct AbsorberConfig {
 
 extern __constant__ AbsorberConfig d_absorber_config;
 
-void loadAbsorberConfigToGPU(const std::string& filepath);
+AbsorberConfig loadAbsorberConfigToGPU(const std::string& filepath);

@@ -1,49 +1,75 @@
 {
-    "Simulation":{
-        "total_rays":100000000,
-        "block_size":256,
-        "grid_res_z":100,
-        "grid_res_x":60,
-        "spp":10,
-        "MAX_BOUNCES":50,
-        "ROUND_TIME":10,
-        "EPSILON":1e-4
+    "Simulation": {
+        "total_rays": 100000000,
+        "block_size": 256,
+        "grid_res_z": 100,
+        "grid_res_x": 60,
+        "spp": 10,
+        "MAX_BOUNCES": 50,
+        "ROUND_TIME": 10,
+        "EPSILON": 0.0001
     },
-    "Sun":{
-        "azimuth":180.0,
-        "zenith":0.0,
-        "DNI":1000.0,
-        "shape":"DEFINED",
-        "csv_path":"../resources/CSR-5.csv",
-        "theta_max":90.0,
-        "sigma":10.0,
-        "csr":0.5
+    "Sun": {
+        "azimuth": 180.0,
+        "zenith": 0.0,
+        "DNI": 1000.0,
+        "shape": "DEFINED",
+        "csv_path": "../resources/CSR-5.csv",
+        "theta_max": 90.0,
+        "sigma": 10.0,
+        "csr": 0.5
     },
-    "ParabolicTrough":{
-        "focal_length":1.7,
-        "length":1.8,
-        "position":[0.0,0.9,0.0],
-        "width":8.61502,
-        "reflectivity":0.92,
-        "slope_error":2,
-        "specularity_error":2.5,
-        "bounds":[
-            [-4.30751,-3.07864],
-            [-3.06864,-1.64956],
-            [-1.63956,-0.075],
-            [0.075,1.64956],
-            [1.64956,3.07864],
-            [3.07864,4.30751]
+    "ParabolicTrough": {
+        "focal_length": 1.7,
+        "length": 1.8,
+        "position": [
+            0.0,
+            0.9,
+            0.0
+        ],
+        "width": 8.61502,
+        "reflectivity": 0.92,
+        "slope_error": 2,
+        "specularity_error": 2.5,
+        "bounds": [
+            [
+                -4.30751,
+                -3.07864
+            ],
+            [
+                -3.06864,
+                -1.64956
+            ],
+            [
+                -1.63956,
+                -0.075
+            ],
+            [
+                0.075,
+                1.64956
+            ],
+            [
+                1.64956,
+                3.07864
+            ],
+            [
+                3.07864,
+                4.30751
+            ]
         ]
     },
-    "Absorber":{
-        "r":0.045,
-        "position":[0.019,0.9,1.7],
-        "length":1.9
+    "Absorber": {
+        "r": 0.050,
+        "position": [
+            0.019,
+            0.9,
+            1.7
+        ],
+        "length": 1.9
     },
-    "optics":{
-        "R_reflectivity":0.92,
-        "A_reflectivity":0.00,
-        "G_transmissivity":0.95
+    "optics": {
+        "R_reflectivity": 0.92,
+        "A_reflectivity": 0.0,
+        "G_transmissivity": 0.95
     }
 }

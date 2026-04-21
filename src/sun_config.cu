@@ -12,11 +12,11 @@ SunShapeType parseSunShapeType(const std::string& type_str) {
     throw std::invalid_argument("Unknown Sun Shape Type: " + type_str);
 }
 
-void loadSunConfigToGPU(const std::string& filepath) {
+SunConfig loadSunConfigToGPU(const std::string& filepath) {
     std::ifstream file(filepath);
     if(!file.is_open()) {
         std::cerr << "Failed to open config file: " << filepath << std::endl;
-        return;
+        exit(1);
     }
 
     json j;
@@ -104,10 +104,11 @@ void loadSunConfigToGPU(const std::string& filepath) {
     }
 
     std::cout << "Successfully loaded sun config to GPU.\n";
+    return h_config;
 }
 
 __host__ void printSunInfo(const SunConfig& config){
-        printf("Sun Shape: %d\n", config.sunshape);
+        // printf("Sun Shape: %d\n", config.sunshape);
         printf("Zenith: %.2f degrees\n", config.zenith);
         printf("Azimuth: %.2f degrees\n", config.azimuth);
         switch(config.sunshape){

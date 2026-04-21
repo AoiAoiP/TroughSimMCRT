@@ -4,11 +4,11 @@ using json = nlohmann::json;
 
 __constant__ ParabolicTroughConfig d_trough_config;
 
-void loadTroughConfigToGPU(const std::string& filepath) {
+ParabolicTroughConfig loadTroughConfigToGPU(const std::string& filepath) {
     std::ifstream file(filepath);
     if(!file.is_open()) {
         std::cerr << "Failed to open config file: " << filepath << std::endl;
-        return;
+        exit(1);
     }
 
     json j;
@@ -40,4 +40,5 @@ void loadTroughConfigToGPU(const std::string& filepath) {
     }
 
     std::cout << "Successfully loaded trough config to GPU." << std::endl;
+    return h_config;
 }

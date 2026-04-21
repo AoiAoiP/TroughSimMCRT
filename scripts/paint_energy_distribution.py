@@ -57,7 +57,7 @@ ax1.set_title('Absorber Flux Distribution (2D Unrolled)', fontsize=14)
 ax1.set_xlabel('Circumferential Arc Length (m)', fontsize=12)
 ax1.set_ylabel('Axial Length (m)', fontsize=12)
 cbar = fig.colorbar(im, ax=ax1, pad=0.02)
-cbar.set_label('Energy Flux Density (Relative Units)', fontsize=12)
+cbar.set_label('Energy Flux Density (kW/m^2)', fontsize=12)
 
 # --- 子图 2: 3D 能流峰值图 ---
 ax2 = fig.add_subplot(1, 2, 2, projection='3d')
@@ -79,4 +79,4 @@ save_path = "flux_distribution_result.png"
 plt.savefig(save_path, dpi=300, bbox_inches='tight')
 print(f"🎉 绘图完成！图片已保存至: {save_path}")
 
-plt.show()
+# plt.show()

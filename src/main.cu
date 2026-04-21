@@ -5,21 +5,20 @@ __global__ void render(float* d_flux_map,int* d_hit_count){
     unsigned long long idx = blockIdx.x * blockDim.x + threadIdx.x;
     if(idx >= d_sim_config.total_rays) return;
 
+    // get ray_origin & normal
     float f = d_trough_config.focal_length;
     float2 rand_origin = Optics::get_random_pair(idx,DIM_ORIGIN_GEN);
     int mirror_index;
     float3 ray_origin = Geometry::sampleTrough(rand_origin.x,rand_origin.y,d_trough_config,mirror_index);
     float3 normal_ideal = normalize(make_float3(-ray_origin.x/(2.0f*f),0.0f,1.0f));
 
+    // get ray_in
     float2 rand_sun = Optics::get_random_pair(idx,DIM_SUN_SHAPE);
     float3 ray_in = normalize(Optics::SampleSunshape(rand_sun.x,rand_sun.y,d_sun_config));
     ray_in = -ray_in;
 
-    // float cos_theta = dot(ray_in,normal_ideal);
-    // float ray_weight = -cos_theta;
-
-    float3 ray_ref_ideal = reflect(ray_in,normal_ideal);
-    
+    // get ray_ref
+    float3 ray_ref_ideal = reflect(ray_in,normal_ideal);   
     float sigma_total = sqrtf(4*d_trough_config.slope_error*d_trough_config.slope_error+d_trough_config.specularity_error*d_trough_config.specularity_error)*0.001f;
     float2 rand_pert = Optics::get_random_pair(idx,DIM_PERT_ERR);
     float3 ray_ref = normalize(Optics::GaussianPerturb(ray_ref_ideal,sigma_total,rand_pert.x,rand_pert.y));
@@ -47,10 +46,9 @@ __global__ void render(float* d_flux_map,int* d_hit_count){
 }
 
 int main(){
-    loadTroughConfigToGPU("../resources/config.json");
-    loadSunConfigToGPU("../resources/config.json");
-    loadAbsorberConfigToGPU("../resources/config.json");
-
+    ParabolicTroughConfig h_trough_config = loadTroughConfigToGPU("../resources/config.json");
+    SunConfig h_sun_config = loadSunConfigToGPU("../resources/config.json");
+    AbsorberConfig h_absorber_config = loadAbsorberConfigToGPU("../resources/config.json");
     SimConfig h_sim_config = loadSimConfigToGPU("../resources/config.json");
 
     int N = h_sim_config.total_rays;
@@ -68,8 +66,10 @@ int main(){
     cudaMalloc((void**)&d_hit_count,sizeof(int));
     cudaMemset(d_hit_count,0,sizeof(int));
     
+    // run Random Pool
     Optics::initRandomPools(Optics::POOL_SIZE,N);
 
+    // run kernel
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
@@ -88,18 +88,27 @@ int main(){
     cudaEventElapsedTime(&milliseconds, start, stop);
     std::cout << "Kernel Execution Time: " << milliseconds << " ms" << std::endl;
 
+    // copy data back to CPU
     cudaMemcpy(h_flux_map,d_flux_map,flux_map_size,cudaMemcpyDeviceToHost);
     cudaMemcpy(&h_hit_count,d_hit_count,sizeof(int),cudaMemcpyDeviceToHost);
+
+    float aperture_area = h_trough_config.valid_width * h_trough_config.length;
+    float absorber_surface_area = 2.0f * PI * h_absorber_config.r * h_absorber_config.length;
+    float bin_area = absorber_surface_area / (float)(h_sim_config.grid_res_x * h_sim_config.grid_res_z);
+    float flux_scale_kW = (h_sun_config.DNI * aperture_area)/((float)N * bin_area) * 0.001f;
     float total_intercepted_energy = 0.0f;
+    for (int i = 0; i < grid_size; ++i) {
+        h_flux_map[i] *= flux_scale_kW; // 转换为 kW/m^2
+    }
     for (int i = 0; i < grid_size; ++i) {
         total_intercepted_energy += h_flux_map[i];
     }
     float intercept_factor = (float)h_hit_count / (float)N;
-    float optical_efficiency = total_intercepted_energy / (float)N;
+    float optical_efficiency = total_intercepted_energy / (float)(N*flux_scale_kW);
     std::cout << "------------------------------------------\n";
     std::cout << "Physical Hits: " << h_hit_count << " / " << N << std::endl;
-    std::cout << "Intercept Factor (Geometric): " << intercept_factor * 100.0f << " %" << std::endl;
-    std::cout << "Optical Efficiency (w/ Reflectivity): " << optical_efficiency * 100.0f << " %" << std::endl;
+    std::cout << "Intercept Factor: " << intercept_factor<< std::endl;
+    std::cout << "Optical Efficiency (kW/ Reflectivity): " << optical_efficiency * 100.0f << " %" << std::endl;
     std::cout << "------------------------------------------\n";
 
     std::ofstream outfile("flux_map.csv");

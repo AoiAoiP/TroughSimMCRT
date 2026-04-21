@@ -36,6 +36,6 @@ extern __constant__ SunConfig d_sun_config;
 
 SunShapeType parseSunShapeType(const std::string& type_str);
 
-void loadSunConfigToGPU(const std::string& filepath);
+SunConfig loadSunConfigToGPU(const std::string& filepath);
 
 void printSunInfo(const SunConfig& config);

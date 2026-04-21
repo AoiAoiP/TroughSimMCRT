@@ -4,11 +4,11 @@ using json = nlohmann::json;
 
 __constant__ AbsorberConfig d_absorber_config;
 
-void loadAbsorberConfigToGPU(const std::string& filepath){
+AbsorberConfig loadAbsorberConfigToGPU(const std::string& filepath){
     std::ifstream file(filepath);
     if(!file.is_open()) {
         std::cerr << "Failed to open config file: " << filepath << std::endl;
-        return;
+        exit(1);
     }
 
     json j;
@@ -29,4 +29,5 @@ void loadAbsorberConfigToGPU(const std::string& filepath){
     }
 
     std::cout << "Successfully loaded absorber config to GPU." << std::endl;
+    return h_config;
 }
