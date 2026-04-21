@@ -48,6 +48,13 @@ cd ..
 python scripts/paint_energy_distribution.py
 ```
 
+### 3. 一步到位（Linux环境）
+如果是Linux环境，直接运行`run.sh`即可。
+```
+# 直接运行一键脚本
+./run.sh
+```
+
 ## 参数配置说明
 本项目的核心仿真参数通过 `resources/config.json` 进行管理，修改此文件无需重新编译代码。核心配置项说明：
 - `sim_config`: 设置总光线数、CUDA Block Size、Grid 策略等。
