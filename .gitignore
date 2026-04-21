@@ -1,0 +1,6 @@
+build/
+out/
+
+resources/config.json
+
+*.png
