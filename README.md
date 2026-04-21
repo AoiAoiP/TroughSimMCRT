@@ -1,48 +1,56 @@
 # 使用CUDA加速的基于双向光线追踪的线性菲涅尔系统的集热管热仿真
-## 项目结构
-Parabolic_Sim/
-├── CMakeLists.txt                  # 现代构建系统入口，指定C++17标准和CUDA架构
-├── README.md                       # 项目说明文档
-├── scripts/                        # 存放所有非编译类的脚本文件
-│   └── paint_energy_distribution.py # Python 可视化出图脚本
-|
-├── resources/                       # 存放所有的输入输出资源文件
-│   ├── config.json                  # 仿真参数配置文件
-|   └── CSR-5.csv                   # 预生成的太阳形状数据（CSR-5模型），CSV格式
-│
-├── include/                        # 存放所有的头文件 (.cuh / .h)，纯数据定义和函数声明
-│   ├── config/                     # 【配置与数据层】彻底取代原来的 SF_mcrt_CPC.cuh
-│   │   ├── sim_config.cuh          # 宏观仿真参数：光线总数、Block/Grid Size、环境参数等
-│   │   ├── trough_config.cuh       # POD结构体：抛物面焦距、长宽，以及6面子镜的边界数组
-│   │   └── absorber_config.cuh     # POD结构体：单层集热管的半径、长度、表面光学属性
-│   │
-│   ├── math/                       # 【数学与底层工具层】
-│   │   ├── helper_math.h           # NVIDIA原生的向量运算库，替代手写的vector.cuh
-│   │   └── root_solver.cuh         # 鲁棒的一元二次方程求根公式（解决精度相消问题）
-│   │
-│   ├── geometry/                   # 【几何求交逻辑层】纯数学计算模块
-│   │   ├── trough_intersect.cuh    # 声明：光线与抛物面的局部坐标系求交函数
-│   │   └── absorber_intersect.cuh  # 声明：光线与圆柱集热管的求交函数
-│   │
-│   ├── optics/                     # 【光学与随机数抽样层】
-│   │   ├── sun_shape.cuh           # 声明：Buie、Gaussian模型等太阳锥采样逻辑
-│   │   └── random_pools.cuh        # 声明：QMCRT核心的 SSP 和 MHNP 显存池加载与读取接口
-│   │
-│   └── postprocess/                # 【后处理与滤波层】
-│       ├── tms_filter.cuh          # 声明：截尾均值平滑(TMS)滤波算法
-│       └── gaussian_filter.cuh     # 声明：高斯滤波算法
-│
-└── src/                            # 存放所有的实现文件 (.cu / .cpp)
-    ├── geometry/
-    │   ├── trough_intersect.cu     # 实现：极致内联的光线与统一数学抛物面求交，及6面边界判定
-    │   └── absorber_intersect.cu   # 实现：集热管圆柱面求交与吸收判断
-    │
-    ├── optics/
-    │   ├── sun_shape.cu            # 实现：根据配置文件在主机/设备端生成太阳形状数据
-    │   └── random_pools.cu         # 实现：预生成 微定日镜法线池(MHNP) 和 太阳形状池(SSP)
-    │
-    ├── postprocess/
-    │   ├── tms_filter.cu           # 实现：基于共享内存(Shared Memory)的TMS滤波 Kernel
-    │   └── file_io.cu              # 实现：将吸收能流密度数组 SaveAsCSV 到外部存储
-    │
-    └── main.cu                     # 【主干控制流】组装各个模块，绝不写具体的数学求交逻辑
+## 项目介绍
+本项目是一个基于 CUDA 加速 的蒙特卡洛光线追踪（MCRT）热仿真求解器，专门针对槽式抛物面太阳能集热器（Parabolic Trough Solar Collector, PTSC）的集热管外表面能流密度分布进行高精度、高并发的计算分析。
+
+## 核心特性
+- 使用高性能 GPU 并行计算，设计了纯 CUDA C++ 实现双向光线追踪算法，支持千万级至亿级光线的秒级仿真。
+- 引入预生成的微定日镜法线池 (MHNP) 和太阳形状池 (SSP)，有效避免了在 Kernel 函数中高频调用随机数生成器（如 `curand`），大幅提升计算效率与精度。
+- 精准的几何建模：
+- - 支持一元二次方程的鲁棒求根公式（解决浮点数精度相消问题）。
+- - 抛物面与圆柱面（集热管）的高效极致内联求交逻辑。
+- - 支持多块子镜拼接的边界判定拦截。
+- 多模型太阳形状 (Sun Shape)：支持 Uniform、Gaussian 以及高精度的 Buie (CSR) 太阳模型建模。
+
+## 环境依赖
+在编译和运行本项目之前，请确保您的系统已安装以下环境：
+- **编译器**: 支持 C++17 的宿主编译器 (GCC 9.0+ 或 MSVC)
+- **CUDA Toolkit**: 11.0 或更高版本
+- **CMake**: 3.18 及以上
+- **Python**: Python 3.8+ (仅用于运行可视化脚本，需安装 `numpy`, `matplotlib`, `pandas`)
+
+## 编译与构建
+本项目采用标准的 CMake 构建系统，在终端中执行以下命令进行编译：
+```
+git clone https://github.com/AoiAoiP/TroughSimMCRT.git
+cd TroughSimMCRT
+
+mkdir build && cd build
+
+cmake ..
+
+make -j8
+```
+
+## 运行与可视化
+编译成功后，可执行文件将生成在 build 目录下。
+### 1. 运行仿真核心
+```
+# 在 build 目录下运行
+./TroughSimMCRT
+```
+程序将自动读取 `resources/config.json` 中的参数，开始执行 MCRT 仿真，并在完成后将能流密度数据输出到 CSV 文件中。
+### 2. 结果可视化
+仿真结束后，可以通过提供的 Python 脚本将 CSV 文件渲染为热力图/能流分布图。
+```
+# 返回项目根目录
+cd ..
+# 运行可视化脚本 (请确保已安装必要的 Python 绘图库)
+python scripts/paint_energy_distribution.py
+```
+
+## 参数配置说明
+本项目的核心仿真参数通过 `resources/config.json` 进行管理，修改此文件无需重新编译代码。核心配置项说明：
+- `sim_config`: 设置总光线数、CUDA Block Size、Grid 策略等。
+- `trough_config`: 设置抛物面的焦距、长度、宽度及子镜拼接边界。
+- `absorber_config`: 集热管的几何参数（如内/外径尺寸）、吸收率及玻璃罩套管的光学属性。
+- `sun_shape`: 选择太阳模型（Buie/Gaussian等）以及误差角。
