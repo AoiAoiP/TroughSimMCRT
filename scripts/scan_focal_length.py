@@ -10,14 +10,13 @@ CONFIG_PATH = '../resources/config.json'
 EXEC_PATH = '../build/mcrt_sim'          
 
 # 焦距扫描范围：1.5m 到 3.0m，步长约 0.05m
-FOCAL_LENGTHS = np.linspace(1.5, 3.0, 31)
+FOCAL_LENGTHS = np.linspace(1.2, 2.7, 31)
 
 # 我们挑选几个典型的面型误差水平进行对比 (单位: mrad)
-# 0.0 (完美镜面), 2.0 (常规水平), 4.0 (较差水平)
-SLOPE_ERRORS_MRAD = [0.0, 2.0, 4.0] 
+SLOPE_ERRORS_MRAD = [0.0,1.5, 2.0, 2.5,3.0] 
 
 # 固定管径为 DN80 进行测试
-FIXED_RADIUS = 0.04
+FIXED_RADIUS = 0.045
 
 def update_config(focal_length, slope_error):
     """读取并同步更新焦距与集热管位置"""
@@ -72,8 +71,8 @@ def main():
     # --- 绘制敏感度（曲率）对比图 ---
     plt.figure(figsize=(10, 6))
     
-    colors = ['green', 'blue', 'red']
-    markers = ['o', 's', '^']
+    colors = ['green', 'blue', 'yellow','red','orange']
+    markers = ['o', 's', '^','D', 'v']
     
     for i, error_mrad in enumerate(SLOPE_ERRORS_MRAD):
         plt.plot(FOCAL_LENGTHS, results[error_mrad], 
@@ -89,8 +88,8 @@ def main():
     plt.grid(True, linestyle=':', alpha=0.7)
     plt.legend(fontsize=12)
     
-    plt.savefig('focal_length_sensitivity.png', dpi=300)
-    print("\n扫描完成！图表已保存为 'focal_length_sensitivity.png'")
+    plt.savefig('../out/focal_length_sensitivity.png', dpi=300)
+    print("\n扫描完成！图表已保存为 '../out/focal_length_sensitivity.png'")
     plt.show()
 
 if __name__ == "__main__":

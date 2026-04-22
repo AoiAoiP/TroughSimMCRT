@@ -111,7 +111,7 @@ int main(){
     std::cout << "Optical Efficiency (kW/ Reflectivity): " << optical_efficiency * 100.0f << " %" << std::endl;
     std::cout << "------------------------------------------\n";
 
-    std::ofstream outfile("flux_map.csv");
+    std::ofstream outfile("../out/flux_map.csv");
     if (outfile.is_open()) {
         for (int z = 0; z < h_sim_config.grid_res_z; ++z) {
             for (int x = 0; x < h_sim_config.grid_res_x; ++x) {
@@ -125,7 +125,7 @@ int main(){
             outfile << "\n"; // 换行
         }
         outfile.close();
-        std::cout << "Flux map successfully saved to 'flux_map.csv'." << std::endl;
+        std::cout << "Flux map successfully saved to 'out/flux_map.csv'." << std::endl;
     } else {
         std::cerr << "Failed to open flux_map.csv for writing!" << std::endl;
     }

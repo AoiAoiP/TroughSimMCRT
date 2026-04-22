@@ -6,7 +6,7 @@ from matplotlib import cm
 # ==========================================
 # 1. 配置参数 (请根据你的 config.json 确认)
 # ==========================================
-csv_file_path = "../build/flux_map.csv"  # 假设你在 scripts 目录下运行，csv 在 build 里
+csv_file_path = "../out/flux_map.csv"  # 假设你在 scripts 目录下运行，csv 在 build 里
 absorber_length = 1.9                  # 集热管总长度 (m)
 absorber_radius = 0.04                 # 集热管半径 (m)
 
@@ -75,7 +75,7 @@ ax2.view_init(elev=30, azim=45)
 # 5. 保存与展示
 # ==========================================
 plt.tight_layout()
-save_path = "flux_distribution_result.png"
+save_path = "../out/flux_distribution.png"
 plt.savefig(save_path, dpi=300, bbox_inches='tight')
 print(f"🎉 绘图完成！图片已保存至: {save_path}")
 

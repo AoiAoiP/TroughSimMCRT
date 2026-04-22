@@ -21,14 +21,20 @@ echo ""
 echo "========================================"
 echo "📊 3. 正在生成 2D/3D 能流密度图..."
 echo "========================================"
-# 由于此时我们在 build 目录下，直接调用上层目录的 python 脚本
-# 并且脚本读取当前目录的 flux_map.csv 是完美匹配的
 python ../scripts/paint_energy_distribution.py
+
+echo ""
+echo "========================================"
+echo "📊 4. 正在分析数据..."
+echo "========================================"
+python ../../scripts/scan_intercept.py
+python ../../scripts/scan_focal_length.py
+python ../../scripts/find_optimal_focal.py
 
 # 跑完后退回根目录
 cd ..
 
 echo ""
 echo "========================================"
-echo "🎉 全流程执行完毕！请查看 build 目录下的图片。"
+echo "🎉 全流程执行完毕！请查看 out 目录下的图片。"
 echo "========================================"

@@ -11,7 +11,7 @@ EXEC_PATH = '../build/mcrt_sim'
 
 # 槽式开口宽度
 APERTURE_WIDTH = 8.61502 
-ABSORBER_RADIUS = 0.04
+ABSORBER_RADIUS = 0.045
 SLOPE_ERROR_RAD = 2
 SPEC_ERROR_RAD = 2.5
 
@@ -99,8 +99,8 @@ def main():
     plt.legend(fontsize=12, loc='lower center')
     
     plt.tight_layout()
-    plt.savefig('optimal_focal_length.png', dpi=300)
-    print("图表已保存为 'optimal_focal_length.png'")
+    plt.savefig('../out/optimal_focal_length.png', dpi=300)
+    print("图表已保存为 '../out/optimal_focal_length.png'")
     plt.show()
 
 if __name__ == "__main__":

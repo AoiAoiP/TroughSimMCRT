@@ -10,8 +10,8 @@ CONFIG_PATH = '../resources/config.json'   # 根据你的实际路径调整
 EXEC_PATH = '../build/mcrt_sim'          # CUDA 程序的执行路径
 SLOPE_ERRORS_MRAD = np.linspace(0, 5, 11)  # 扫描范围：0 到 5 mrad，共 11 个点
 TUBES = {
-    'DN80': 0.040,  # 半径 40mm
-    'DN90': 0.045   # 半径 45mm
+    'DN80': 0.045,  # 半径 45mm
+    'DN90': 0.050   # 半径 50mm
 }
 
 def update_config(radius, slope_error):
@@ -80,8 +80,8 @@ def main():
     plt.figure(figsize=(10, 6))
     
     # 绘制 DN80 和 DN90 曲线
-    plt.plot(SLOPE_ERRORS_MRAD, results['DN80'], marker='o', linestyle='-', color='b', label='DN80 (r=40mm)')
-    plt.plot(SLOPE_ERRORS_MRAD, results['DN90'], marker='s', linestyle='--', color='r', label='DN90 (r=45mm)')
+    plt.plot(SLOPE_ERRORS_MRAD, results['DN80'], marker='o', linestyle='-', color='b', label='DN80 (r=45mm)')
+    plt.plot(SLOPE_ERRORS_MRAD, results['DN90'], marker='s', linestyle='--', color='r', label='DN90 (r=50mm)')
     
     plt.title('Geometric Intercept Factor vs. Slope Error', fontsize=14)
     plt.xlabel('Slope Error (mrad)', fontsize=12)
@@ -91,8 +91,8 @@ def main():
     plt.legend(fontsize=12)
     
     # 保存并显示图像
-    plt.savefig('intercept_factor_comparison.png', dpi=300)
-    print("\n扫描完成！图表已保存为 'intercept_factor_comparison.png'")
+    plt.savefig('../out/intercept_factor_comparison.png', dpi=300)
+    print("\n扫描完成！图表已保存到 '../out/intercept_factor_comparison.png'")
     plt.show()
 
 if __name__ == "__main__":
