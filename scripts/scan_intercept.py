@@ -8,10 +8,10 @@ import os
 # --- 配置参数 ---
 CONFIG_PATH = '../resources/config.json'   # 根据你的实际路径调整
 EXEC_PATH = '../build/mcrt_sim'          # CUDA 程序的执行路径
-SLOPE_ERRORS_MRAD = np.linspace(0, 5, 11)  # 扫描范围：0 到 5 mrad，共 11 个点
+SLOPE_ERRORS_MRAD = np.linspace(0, 3, 7)  # 扫描范围：0 到 5 mrad，共 7 个点
 TUBES = {
-    'DN80': 0.045,  # 半径 45mm
-    'DN90': 0.050   # 半径 50mm
+    'DN80': 0.04,  # 半径 40mm
+    'DN90': 0.045   # 半径 45mm
 }
 
 def update_config(radius, slope_error):
@@ -35,8 +35,8 @@ def run_simulation():
     
     output = result.stdout
     
-    # --- 核心：正则表达式提取 ---
-    # CUDA软件运行日志  "Intercept Factor: 0.985"
+    # --- 根据CUDA日志提取拦截率 ---
+    # 例："Intercept Factor: 0.985"
     # 需要根据实际终端输出修改此正则！
     match = re.search(r'Intercept\s*Factor[:=]\s*([0-9.]+)', output, re.IGNORECASE)
     
@@ -80,10 +80,10 @@ def main():
     plt.figure(figsize=(10, 6))
     
     # 绘制 DN80 和 DN90 曲线
-    plt.plot(SLOPE_ERRORS_MRAD, results['DN80'], marker='o', linestyle='-', color='b', label='DN80 (r=45mm)')
-    plt.plot(SLOPE_ERRORS_MRAD, results['DN90'], marker='s', linestyle='--', color='r', label='DN90 (r=50mm)')
+    plt.plot(SLOPE_ERRORS_MRAD, results['DN80'], marker='o', linestyle='-', color='b', label='DN80 (r=40mm)')
+    plt.plot(SLOPE_ERRORS_MRAD, results['DN90'], marker='s', linestyle='--', color='r', label='DN90 (r=45mm)')
     
-    plt.title('Geometric Intercept Factor vs. Slope Error', fontsize=14)
+    plt.title('Geometric Intercept Factor vs. Slope_Error', fontsize=14)
     plt.xlabel('Slope Error (mrad)', fontsize=12)
     plt.ylabel('Geometric Intercept Factor (%)', fontsize=12)
     plt.ylim(0, 105)

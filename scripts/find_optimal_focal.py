@@ -11,12 +11,12 @@ EXEC_PATH = '../build/mcrt_sim'
 
 # 槽式开口宽度
 APERTURE_WIDTH = 8.61502 
-ABSORBER_RADIUS = 0.045
+ABSORBER_RADIUS = 0.04
 SLOPE_ERROR_RAD = 2
 SPEC_ERROR_RAD = 2.5
 
 # 焦距精细扫描范围：0.8m 到 3.0m，步长 0.05m (共 45个点)
-FOCAL_LENGTHS = np.linspace(0.8, 3.0, 45)
+FOCAL_LENGTHS = np.linspace(0.8, 2.5, 35)
 
 def update_config(focal_length):
     """读取并更新 config.json 文件，固定物理边界条件，并同步焦距与集热管坐标"""

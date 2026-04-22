@@ -16,7 +16,7 @@ FOCAL_LENGTHS = np.linspace(1.2, 2.7, 31)
 SLOPE_ERRORS_MRAD = [0.0,1.5, 2.0, 2.5,3.0] 
 
 # 固定管径为 DN80 进行测试
-FIXED_RADIUS = 0.045
+FIXED_RADIUS = 0.04
 
 def update_config(focal_length, slope_error):
     """读取并同步更新焦距与集热管位置"""
