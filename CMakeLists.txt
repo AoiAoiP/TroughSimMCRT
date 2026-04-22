@@ -36,6 +36,7 @@ set(MCRT_HEADERS
     include/geometry/geometry_func.cuh
     include/geometry/absorber_intersect.cuh
     include/geometry/trough_intersect.cuh
+    include/postprocess/gaussian_filter.cuh
     include/app.cuh
 )
 

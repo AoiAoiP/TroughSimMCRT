@@ -68,7 +68,7 @@ namespace Optics{
         if(config.d_cdf_values == nullptr || config.d_cdf_angles == nullptr) return make_float3(0.0f,0.0f,-1.0f); 
 
         float theta = 0.0f;
-        float phi = PI * 2.0f * PI;
+        float phi = PI * 2.0f * u2;
         switch(config.sunshape){
             case SunShapeType::UNIFORM:
                 theta = config.params.theta_max * sqrtf(u1);

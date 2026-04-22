@@ -101,7 +101,7 @@ def main():
     plt.tight_layout()
     plt.savefig('../out/optimal_focal_length.png', dpi=300)
     print("图表已保存为 '../out/optimal_focal_length.png'")
-    plt.show()
+    # plt.show()
 
 if __name__ == "__main__":
     main()

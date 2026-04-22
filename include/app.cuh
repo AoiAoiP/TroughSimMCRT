@@ -9,6 +9,7 @@
 #include "optics/random_pools.cuh"
 #include "geometry/trough_intersect.cuh"
 #include "geometry/absorber_intersect.cuh"
+#include "postprocess/gaussian_filter.cuh"
 
 enum SamplingDimension {
     DIM_ORIGIN_GEN = 0,    // 生成抛物面起点 (u1, u2)

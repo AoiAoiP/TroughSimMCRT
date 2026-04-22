@@ -15,6 +15,14 @@ __global__ void render(float* d_flux_map,int* d_hit_count){
     // get ray_in
     float2 rand_sun = Optics::get_random_pair(idx,DIM_SUN_SHAPE);
     float3 ray_in = normalize(Optics::SampleSunshape(rand_sun.x,rand_sun.y,d_sun_config));
+    // printf("idx=%ld,ray_in=(%.4f,%.4f,%.4f)\n",idx,ray_in.x,ray_in.y,ray_in.z);
+
+    // shadow test
+    Geometry::HitInfo shadow_hit = Geometry::intersectAbsorber(ray_origin, ray_in, d_absorber_config);
+    if(shadow_hit.is_hit){
+        return; 
+    }
+
     ray_in = -ray_in;
 
     // get ray_ref
@@ -87,6 +95,16 @@ int main(){
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
     std::cout << "Kernel Execution Time: " << milliseconds << " ms" << std::endl;
+
+    // apply gaussian filter
+    std::cout << "Applying Gaussian Filter (Radius=2, Sigma=1.2)..." << std::endl;
+    PostProcess::applyGaussianFilter(
+        d_flux_map, 
+        h_sim_config.grid_res_x, 
+        h_sim_config.grid_res_z, 
+        2, 
+        1.2f
+    );
 
     // copy data back to CPU
     cudaMemcpy(h_flux_map,d_flux_map,flux_map_size,cudaMemcpyDeviceToHost);

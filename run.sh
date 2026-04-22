@@ -7,14 +7,13 @@ echo "========================================"
 echo "🚀 1. 正在编译 CUDA MCRT 引擎..."
 echo "========================================"
 cd build
-# 使用 -j 自动获取 CPU 核心数进行多线程并发编译，速度起飞
 make -j$(nproc)
 
 echo ""
 echo "========================================"
 echo "☀️  2. 正在执行能流仿真追踪..."
 echo "========================================"
-# 执行仿真，生成的 flux_map.csv 会保存在当前 build 目录下
+# 生成的 flux_map.csv 会保存在 out 目录下
 ./mcrt_sim
 
 echo ""
@@ -27,11 +26,10 @@ echo ""
 echo "========================================"
 echo "📊 4. 正在分析数据..."
 echo "========================================"
-python ../../scripts/scan_intercept.py
-python ../../scripts/scan_focal_length.py
-python ../../scripts/find_optimal_focal.py
+python ../scripts/scan_intercept.py
+python ../scripts/scan_focal_length.py
+python ../scripts/find_optimal_focal.py
 
-# 跑完后退回根目录
 cd ..
 
 echo ""

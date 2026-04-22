@@ -93,7 +93,7 @@ def main():
     # 保存并显示图像
     plt.savefig('../out/intercept_factor_comparison.png', dpi=300)
     print("\n扫描完成！图表已保存到 '../out/intercept_factor_comparison.png'")
-    plt.show()
+    # plt.show()
 
 if __name__ == "__main__":
     main()

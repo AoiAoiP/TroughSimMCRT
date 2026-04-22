@@ -12,7 +12,7 @@ EXEC_PATH = '../build/mcrt_sim'
 # 焦距扫描范围：1.5m 到 3.0m，步长约 0.05m
 FOCAL_LENGTHS = np.linspace(1.2, 2.7, 31)
 
-# 我们挑选几个典型的面型误差水平进行对比 (单位: mrad)
+# 挑选几个典型的面型误差水平进行对比 (单位: mrad)
 SLOPE_ERRORS_MRAD = [0.0,1.5, 2.0, 2.5,3.0] 
 
 # 固定管径为 DN80 进行测试
@@ -30,6 +30,7 @@ def update_config(focal_length, slope_error):
     config['ParabolicTrough']['focal_length'] = focal_length
     
     # 3. 同步更新集热管的空间位置
+    config['Absorber']['r'] = FIXED_RADIUS
     config['Absorber']['position'][2] = focal_length
     
     with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
@@ -90,7 +91,7 @@ def main():
     
     plt.savefig('../out/focal_length_sensitivity.png', dpi=300)
     print("\n扫描完成！图表已保存为 '../out/focal_length_sensitivity.png'")
-    plt.show()
+    # plt.show()
 
 if __name__ == "__main__":
     main()
