@@ -7,6 +7,7 @@
 #include <sstream>
 #include <cuda_runtime.h>
 #include "config/json.hpp"
+#include "cu_math.cuh"
 
 enum class SunShapeType {
     UNIFORM,
@@ -24,7 +25,6 @@ struct SunConfig {
     union {
         float theta_max;    // UNIFORM
         float sigma;        // GAUSSIAN
-        float csr;          // BUIE
     } params;
 
     int table_size;

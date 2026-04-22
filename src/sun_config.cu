@@ -35,23 +35,12 @@ SunConfig loadSunConfigToGPU(const std::string& filepath) {
     h_config.d_cdf_values = nullptr;
     h_config.table_size = 0;
 
-    switch(h_config.sunshape) {
-        case SunShapeType::UNIFORM:
-            h_config.params.theta_max = sun_json["theta_max"].get<float>();
-            break;
-        case SunShapeType::GAUSSIAN:
-            h_config.params.sigma = sun_json["sigma"].get<float>();
-            break;
-        case SunShapeType::BUIE:
-            h_config.params.csr = sun_json["csr"].get<float>();
-            break;
-        case SunShapeType::DEFINED:
-            // For DEFINED shape, we will load the CDF table later
-            break;
-    }
-
-    // If DEFINED shape, load CDF table
-    if(h_config.sunshape == SunShapeType::DEFINED) {
+    if(h_config.sunshape == SunShapeType::UNIFORM){
+        h_config.params.theta_max = sun_json["theta_max"].get<float>();
+    }else if(h_config.sunshape == SunShapeType::GAUSSIAN){
+        h_config.params.sigma = sun_json["sigma"].get<float>();
+    }else if(h_config.sunshape == SunShapeType::DEFINED || h_config.sunshape == SunShapeType::BUIE) {
+        // If BUIE/DEFINED shape, load CDF table
         std::string csv_path = sun_json["csv_path"].get<std::string>();
         std::ifstream csv_file(csv_path);
 
@@ -75,13 +64,17 @@ SunConfig loadSunConfigToGPU(const std::string& filepath) {
 
         std::vector<float> cdf(N,0.0f);
         float sum = 0.0f;
-        for(int i = 0; i < N; ++i) {
-            float d_theta_rad = (i == 0) ? angles[i] * 0.001f : (angles[i] - angles[i-1]) * 0.001f; // Convert mrad to rad
-            float theta_rad = angles[i] * 0.001f; // Convert mrad to rad
-            float step_val = intensities[i] * sinf(theta_rad) * d_theta_rad; // I(θ) * sin(θ) * dθ
+        for(int i = 1; i < N; ++i) {
+            float theta_prev = angles[i -1] * 0.001f;
+            float theta_curr = angles[i] * 0.001f;
+            float d_theta = theta_curr - theta_prev;
+            float avg_intensity = (intensities[i-1] + intensities[i]) / 2.0f;
+            float avg_sin_theta = (sinf(theta_prev) + sinf(theta_curr)) / 2.0f;
+            float step_val = avg_intensity * 2.0f * PI * avg_sin_theta * d_theta;
             sum += step_val;
             cdf[i] = sum;
         }
+        cdf[0]=0.0f;
 
         // 归一化
         for(int i = 0; i < N; ++i) {
@@ -105,24 +98,4 @@ SunConfig loadSunConfigToGPU(const std::string& filepath) {
 
     std::cout << "Successfully loaded sun config to GPU.\n";
     return h_config;
-}
-
-__host__ void printSunInfo(const SunConfig& config){
-        // printf("Sun Shape: %d\n", config.sunshape);
-        printf("Zenith: %.2f degrees\n", config.zenith);
-        printf("Azimuth: %.2f degrees\n", config.azimuth);
-        switch(config.sunshape){
-            case SunShapeType::UNIFORM:
-                printf("Uniform Sunshape with theta_max = %.4f radians\n", config.params.theta_max);
-                break;
-            case SunShapeType::GAUSSIAN:
-                printf("Gaussian Sunshape with sigma = %.4f radians\n", config.params.sigma);
-                break;
-            case SunShapeType::BUIE:
-                printf("Buie Sunshape with CSR = %.4f\n", config.params.csr);
-                break;
-            case SunShapeType::DEFINED:
-                printf("Defined Sunshape with CDF table size = %d\n", config.table_size);
-                break;
-    }
 }
