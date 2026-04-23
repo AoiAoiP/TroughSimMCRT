@@ -54,14 +54,17 @@ def main():
         return
 
     intercept_factors = []
+    rim_angles_deg = []
 
     print(f"正在寻优... (开口={APERTURE_WIDTH}m, DN80, 面型误差=2.0mrad)")
     
     for fl in FOCAL_LENGTHS:
         update_config(fl)
         intercept = run_simulation()
+        rim_angle_deg = np.degrees(2 * np.arctan(APERTURE_WIDTH / (4 * fl)))
         intercept_factors.append(intercept)
-        print(f"  测试焦距: {fl:.2f}m -> 几何拦截率: {intercept:.2f}%")
+        rim_angles_deg.append(rim_angle_deg)
+        print(f"  测试焦距: {fl:.2f}m -> 几何拦截率: {intercept:.2f}%, 边缘角：{rim_angle_deg:.2f}°")
 
     # --- 寻找最优焦距及其对应的拦截率 ---
     max_intercept = max(intercept_factors)
@@ -72,31 +75,68 @@ def main():
     print(f"✅ 寻优完成！")
     print(f"最优焦距取值: {optimal_fl:.2f} m")
     print(f"最大几何拦截率: {max_intercept:.2f}%")
-    
-    # 计算此时的边缘角 (Rim Angle)
-    rim_angle_rad = 2 * np.arctan(APERTURE_WIDTH / (4 * optimal_fl))
-    rim_angle_deg = np.degrees(rim_angle_rad)
-    print(f"对应的系统边缘角: {rim_angle_deg:.1f}°")
+    rim_angle = np.degrees(2 * np.arctan(APERTURE_WIDTH / (4 * optimal_fl)))
+    print(f"对应的系统边缘角: {rim_angle:.2f}°")
     print("="*40 + "\n")
 
+    # --- 计算推荐区间 (85°-95°) 对应的焦距 ---
+    def phi_to_f(phi_deg):
+        """边缘角转焦距公式的逆运算"""
+        return APERTURE_WIDTH / (4 * np.tan(np.radians(phi_deg / 2)))
+
+    f_start = phi_to_f(95)  # 边缘角大，焦距小
+    f_end = phi_to_f(85)    # 边缘角小，焦距大
+    
+    # 筛选推荐区间内的数据点进行分析
+    rec_mask = (FOCAL_LENGTHS >= f_start) & (FOCAL_LENGTHS <= f_end)
+    rec_focals = FOCAL_LENGTHS[rec_mask]
+    rec_intercepts = np.array(intercept_factors)[rec_mask]
+    
+    if len(rec_intercepts) > 0:
+        avg_rec_if = np.mean(rec_intercepts)
+        max_rec_if = np.max(rec_intercepts)
+    else:
+        avg_rec_if = max_rec_if = 0.0
+
+    print(f" 工程推荐区间分析 (85°~95°):")
+    print(f"  对应焦距范围: {f_start:.3f}m - {f_end:.3f}m")
+    print(f"  区间内最大拦截率: {max_rec_if:.2f}%")
+
     # --- 绘制寻优曲线并标注极值点 ---
-    plt.figure(figsize=(10, 6))
-    
-    plt.plot(FOCAL_LENGTHS, intercept_factors, marker='o', linestyle='-', color='#2ca02c', linewidth=2)
-    
+    fig, ax1 = plt.subplots(figsize=(11, 6))
+
+    # 绘制主轴：几何拦截率 (Green)
+    line1 = ax1.plot(FOCAL_LENGTHS, intercept_factors, marker='o', linestyle='-', 
+                     color='#2ca02c', linewidth=2, label='Intercept Factor (%)')
+    ax1.set_xlabel('Focal Length (m)', fontsize=12)
+    ax1.set_ylabel('Geometric Intercept Factor (%)', fontsize=12, color='#2ca02c')
+    ax1.tick_params(axis='y', labelcolor='#2ca02c')
+    ax1.grid(True, linestyle=':', alpha=0.7)
+
     # 用红星标注最优点
-    plt.plot(optimal_fl, max_intercept, marker='*', color='red', markersize=15, 
-             label=f'Optimal F={optimal_fl:.2f}m\nMax IF={max_intercept:.2f}%')
+    ax1.plot(optimal_fl, max_intercept, marker='*', color='red', markersize=15, 
+             label=f'Optimal: F={optimal_fl:.2f}m, IF={max_intercept:.2f}%')
+    ax1.axvline(x=optimal_fl, color='red', linestyle='--', alpha=0.3)
+
+    # 创建边缘角副轴
+    ax2 = ax1.twinx()
+    line2 = ax2.plot(FOCAL_LENGTHS, rim_angles_deg, linestyle='--', color='#1f77b4', 
+                     linewidth=2, label='Rim Angle (deg)')
+    ax2.set_ylabel('Rim Angle (degrees)', fontsize=12, color='#1f77b4')
+    ax2.tick_params(axis='y', labelcolor='#1f77b4')
+
+    # --- 在 ax2 (边缘角轴) 上绘制推荐区间阴影 ---
+    ax2.axhspan(85, 95, color='orange', alpha=0.2, label='Recommended Rim Angle (85°-95°)')
     
-    # 添加辅助线
-    plt.axvline(x=optimal_fl, color='red', linestyle='--', alpha=0.5)
-    plt.axhline(y=max_intercept, color='red', linestyle='--', alpha=0.5)
-    
-    plt.title(f'Optimal Focal Length Search\n(W={APERTURE_WIDTH}m, Tube=DN80, SlopeErr=2.0mrad)', fontsize=14)
-    plt.xlabel('Focal Length (m)', fontsize=12)
-    plt.ylabel('Geometric Intercept Factor (%)', fontsize=12)
-    plt.grid(True, linestyle=':', alpha=0.7)
-    plt.legend(fontsize=12, loc='lower center')
+    # 在 ax1 (焦距轴) 上同步绘制竖向填充，方便对齐
+    ax1.axvspan(f_start, f_end, color='gray', alpha=0.1, linestyle='--')
+
+    # 合并图例
+    lines, labels = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines + lines2, labels + labels2, loc='upper right', fontsize=10)
+
+    plt.title(f'Optimal Focal Length & Rim Angle\n(Aperture={APERTURE_WIDTH}m, DN80, SlopeErr=2.0mrad)', fontsize=14)
     
     plt.tight_layout()
     plt.savefig('../out/optimal_focal_length.png', dpi=300)

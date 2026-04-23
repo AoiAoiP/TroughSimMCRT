@@ -8,7 +8,7 @@ import os
 # --- 配置参数 ---
 CONFIG_PATH = '../resources/config.json'   # 根据你的实际路径调整
 EXEC_PATH = '../build/mcrt_sim'          # CUDA 程序的执行路径
-SLOPE_ERRORS_MRAD = np.linspace(0, 3, 7)  # 扫描范围：0 到 5 mrad，共 7 个点
+SLOPE_ERRORS_MRAD = np.linspace(0, 5, 11)  # 扫描范围：0 到 5 mrad，共 7 个点
 TUBES = {
     'DN80': 0.04,  # 半径 40mm
     'DN90': 0.045   # 半径 45mm
@@ -20,7 +20,9 @@ def update_config(radius, slope_error):
         config = json.load(f)
     
     config['Absorber']['r'] = radius
+    config['Absorber']['position'][2] = 1.7
     config['ParabolicTrough']['slope_error'] = slope_error
+    config['ParabolicTrough']['focal_length'] = 1.7
     
     with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
         json.dump(config, f, indent=4)
