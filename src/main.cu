@@ -27,7 +27,7 @@ __global__ void render(float* d_flux_map,int* d_hit_count){
 
     // get ray_ref
     float3 ray_ref_ideal = reflect(ray_in,normal_ideal);   
-    float sigma_total = sqrtf(4*d_trough_config.slope_error*d_trough_config.slope_error+d_trough_config.specularity_error*d_trough_config.specularity_error)*0.001f;
+    float sigma_total = sqrtf(4*d_trough_config.slope_error*d_trough_config.slope_error+d_trough_config.specularity_error*d_trough_config.specularity_error)*0.001f; // transfer mrad to rad
     float2 rand_pert = Optics::get_random_pair(idx,DIM_PERT_ERR);
     float3 ray_ref = normalize(Optics::GaussianPerturb(ray_ref_ideal,sigma_total,rand_pert.x,rand_pert.y));
     

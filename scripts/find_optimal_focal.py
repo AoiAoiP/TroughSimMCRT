@@ -3,14 +3,17 @@ import subprocess
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import os
+import copy
 
 # --- 核心工程物理参数配置 ---
 CONFIG_PATH = '../resources/config.json'   
 EXEC_PATH = '../build/mcrt_sim'          
 
 # 槽式开口宽度
-APERTURE_WIDTH = 8.61502 
+DEFALUT_WIDTH = 8.61502
+APERTURE_WIDTH = np.linspace(5.6, 9.1, 8)
 ABSORBER_RADIUS = 0.04
 SLOPE_ERROR_RAD = 2
 SPEC_ERROR_RAD = 2.5
@@ -18,13 +21,15 @@ SPEC_ERROR_RAD = 2.5
 # 焦距精细扫描范围：0.8m 到 3.0m，步长 0.05m (共 45个点)
 FOCAL_LENGTHS = np.linspace(0.8, 2.5, 35)
 
-def update_config(focal_length):
+def update_config(width,focal_length,original_config):
     """读取并更新 config.json 文件，固定物理边界条件，并同步焦距与集热管坐标"""
     with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
         config = json.load(f)
     
+    config = copy.deepcopy(original_config)
+    scale_ratio = width / DEFALUT_WIDTH
     # 1. 设置固定的物理边界条件
-    config['ParabolicTrough']['width'] = APERTURE_WIDTH
+    config['ParabolicTrough']['width'] = width
     config['ParabolicTrough']['slope_error'] = SLOPE_ERROR_RAD
     config['ParabolicTrough']['specularity_error'] = SPEC_ERROR_RAD
     config['Absorber']['r'] = ABSORBER_RADIUS
@@ -32,6 +37,67 @@ def update_config(focal_length):
     # 2. 同步更新焦距与集热管中心高度
     config['ParabolicTrough']['focal_length'] = focal_length
     config['Absorber']['position'][2] = focal_length 
+
+    # 3. 重新计算子镜bounds
+    orig_bounds = original_config['ParabolicTrough']['bounds']
+    half_w = width / 2.0
+    center_offset = 0.075
+    gap = 0.01
+    
+    # 提取原始左右两侧各子镜的纯镜面长度
+    # 左侧镜面 (索引 0, 1, 2)
+    w0 = orig_bounds[0][1] - orig_bounds[0][0]
+    w1 = orig_bounds[1][1] - orig_bounds[1][0]
+    w2 = orig_bounds[2][1] - orig_bounds[2][0]
+    sum_L = w0 + w1 + w2
+    
+    # 右侧镜面 (索引 3, 4, 5)
+    w3 = orig_bounds[3][1] - orig_bounds[3][0]
+    w4 = orig_bounds[4][1] - orig_bounds[4][0]
+    w5 = orig_bounds[5][1] - orig_bounds[5][0]
+    sum_R = w3 + w4 + w5
+    
+    # 计算新开口下，单侧可用于排布纯镜面的可用总长度
+    # 总长(half_w) - 中心留空(center_offset) - 两个子镜间隙(2 * gap)
+    avail_mirrors = (half_w - center_offset) - (2 * gap)
+    
+    # 按原比例分配新的有效镜面宽度
+    new_w0 = w0 / sum_L * avail_mirrors
+    new_w1 = w1 / sum_L * avail_mirrors
+    # w2 余量直接由坐标约束保证，无需单独分配
+    
+    new_w3 = w3 / sum_R * avail_mirrors
+    new_w4 = w4 / sum_R * avail_mirrors
+    
+    # 依次拼接生成新的 bounds 坐标序列
+    # --- 左侧 bounds (从外缘向中心收拢) ---
+    L0_start = -half_w
+    L0_end = L0_start + new_w0
+    
+    L1_start = L0_end + gap
+    L1_end = L1_start + new_w1
+    
+    L2_start = L1_end + gap
+    L2_end = -center_offset  # 强制锚定中心左边界
+    
+    # --- 右侧 bounds (从中心向外缘展开) ---
+    R3_start = center_offset # 强制锚定中心右边界
+    R3_end = R3_start + new_w3
+    
+    R4_start = R3_end + gap
+    R4_end = R4_start + new_w4
+    
+    R5_start = R4_end + gap
+    R5_end = half_w          # 强制锚定外缘
+    
+    config['ParabolicTrough']['bounds'] = [
+        [round(L0_start, 5), round(L0_end, 5)],
+        [round(L1_start, 5), round(L1_end, 5)],
+        [round(L2_start, 5), round(L2_end, 5)],
+        [round(R3_start, 5), round(R3_end, 5)],
+        [round(R4_start, 5), round(R4_end, 5)],
+        [round(R5_start, 5), round(R5_end, 5)]
+    ]
     
     with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
         json.dump(config, f, indent=4)
@@ -53,95 +119,89 @@ def main():
         print("请检查 config.json 或可执行文件的路径。")
         return
 
-    intercept_factors = []
-    rim_angles_deg = []
+    with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+        original_config = json.load(f)
 
-    print(f"正在寻优... (开口={APERTURE_WIDTH}m, DN80, 面型误差=2.0mrad)")
+    try:
+        results = {}  # 用于存储不同开口宽度下的结果
+        
+        print(f"开始多参数寻优... (开口范围: {APERTURE_WIDTH[0]:.1f}m - {APERTURE_WIDTH[-1]:.1f}m, 面型误差=2.0mrad)")
+        
+        # --- 双层循环扫描 ---
+        for w in APERTURE_WIDTH:
+            print(f"\n>> 正在测试开口宽度: {w:.2f}m")
+            results[w] = {'intercepts': [], 'rim_angles': []}
+            
+            for fl in FOCAL_LENGTHS:
+                update_config(w, fl,original_config)
+                intercept = run_simulation()
+                rim_angle_deg = np.degrees(2 * np.arctan(w / (4 * fl)))
+                
+                results[w]['intercepts'].append(intercept)
+                results[w]['rim_angles'].append(rim_angle_deg)
+                # 可视化输出可按需取消注释
+                print(f"  F={fl:.2f}m -> IF={intercept:.2f}%, Rim={rim_angle_deg:.1f}°")
+
+        # --- 绘图逻辑 ---
+        fig, ax1 = plt.subplots(figsize=(12, 7))
+        ax2 = ax1.twinx()
+        
+        # 颜色映射设置
+        colors = cm.viridis(np.linspace(0, 0.9, len(APERTURE_WIDTH)))
+        
+        optimal_stats = []
+
+        for i, w in enumerate(APERTURE_WIDTH):
+            c = colors[i]
+            intercepts = results[w]['intercepts']
+            rim_angles = results[w]['rim_angles']
+            
+            # 记录并标注各开口宽度的最优解
+            max_if = max(intercepts)
+            opt_idx = intercepts.index(max_if)
+            opt_fl = FOCAL_LENGTHS[opt_idx]
+            opt_rim = rim_angles[opt_idx]
+            optimal_stats.append(f"W={w:.1f}m: IF={max_if:.1f}%, F={opt_fl:.2f}m (Rim: {opt_rim:.1f}°)")
+            
+            # 绘制主轴（拦截率）：实线
+            ax1.plot(FOCAL_LENGTHS, intercepts, marker='.', linestyle='-', color=c, 
+                     linewidth=2, label=f'IF (W={w:.1f}m)')
+            # 标注最优点
+            ax1.plot(opt_fl, max_if, marker='*', color=c, markersize=12)
+            
+            # 绘制副轴（边缘角）：虚线，无标记
+            ax2.plot(FOCAL_LENGTHS, rim_angles, linestyle='--', color=c, alpha=0.6)
+
+        # 设置坐标轴
+        ax1.set_xlabel('Focal Length (m)', fontsize=12)
+        ax1.set_ylabel('Geometric Intercept Factor (%)', fontsize=12)
+        ax2.set_ylabel('Rim Angle (degrees)', fontsize=12)
+        ax1.grid(True, linestyle=':', alpha=0.7)
+
+        # 绘制固定的推荐边缘角区间 (在副轴 ax2 上)
+        ax2.axhspan(85, 95, color='orange', alpha=0.15, label='Recommended Rim Angle (85°-95°)')
+
+        # 合并图例
+        lines1, labels1 = ax1.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        # 由于线条较多，将图例放在外部或分为两列
+        ax1.legend(lines1 + lines2, labels1 + labels2, loc='lower center', 
+                   bbox_to_anchor=(0.5, -0.25), ncol=3, fontsize=10)
+
+        plt.title('Intercept Factor & Rim Angle vs Focal Length (Varying Aperture Width)', fontsize=14)
+        plt.tight_layout()
+        plt.subplots_adjust(bottom=0.2)  # 给底部图例留出空间
+        
+        plt.savefig('../out/multi_width_focal_length.png', dpi=300)
+        print("\n✅ 寻优与绘图完成！图表已保存为 '../out/multi_width_focal_length.png'")
+        print("\n焦距--拦截率极值参数汇总：")
+        for stat in optimal_stats:
+            print("  " + stat)
     
-    for fl in FOCAL_LENGTHS:
-        update_config(fl)
-        intercept = run_simulation()
-        rim_angle_deg = np.degrees(2 * np.arctan(APERTURE_WIDTH / (4 * fl)))
-        intercept_factors.append(intercept)
-        rim_angles_deg.append(rim_angle_deg)
-        print(f"  测试焦距: {fl:.2f}m -> 几何拦截率: {intercept:.2f}%, 边缘角：{rim_angle_deg:.2f}°")
-
-    # --- 寻找最优焦距及其对应的拦截率 ---
-    max_intercept = max(intercept_factors)
-    optimal_idx = intercept_factors.index(max_intercept)
-    optimal_fl = FOCAL_LENGTHS[optimal_idx]
-    
-    print("\n" + "="*40)
-    print(f"✅ 寻优完成！")
-    print(f"最优焦距取值: {optimal_fl:.2f} m")
-    print(f"最大几何拦截率: {max_intercept:.2f}%")
-    rim_angle = np.degrees(2 * np.arctan(APERTURE_WIDTH / (4 * optimal_fl)))
-    print(f"对应的系统边缘角: {rim_angle:.2f}°")
-    print("="*40 + "\n")
-
-    # --- 计算推荐区间 (85°-95°) 对应的焦距 ---
-    def phi_to_f(phi_deg):
-        """边缘角转焦距公式的逆运算"""
-        return APERTURE_WIDTH / (4 * np.tan(np.radians(phi_deg / 2)))
-
-    f_start = phi_to_f(95)  # 边缘角大，焦距小
-    f_end = phi_to_f(85)    # 边缘角小，焦距大
-    
-    # 筛选推荐区间内的数据点进行分析
-    rec_mask = (FOCAL_LENGTHS >= f_start) & (FOCAL_LENGTHS <= f_end)
-    rec_focals = FOCAL_LENGTHS[rec_mask]
-    rec_intercepts = np.array(intercept_factors)[rec_mask]
-    
-    if len(rec_intercepts) > 0:
-        avg_rec_if = np.mean(rec_intercepts)
-        max_rec_if = np.max(rec_intercepts)
-    else:
-        avg_rec_if = max_rec_if = 0.0
-
-    print(f" 工程推荐区间分析 (85°~95°):")
-    print(f"  对应焦距范围: {f_start:.3f}m - {f_end:.3f}m")
-    print(f"  区间内最大拦截率: {max_rec_if:.2f}%")
-
-    # --- 绘制寻优曲线并标注极值点 ---
-    fig, ax1 = plt.subplots(figsize=(11, 6))
-
-    # 绘制主轴：几何拦截率 (Green)
-    line1 = ax1.plot(FOCAL_LENGTHS, intercept_factors, marker='o', linestyle='-', 
-                     color='#2ca02c', linewidth=2, label='Intercept Factor (%)')
-    ax1.set_xlabel('Focal Length (m)', fontsize=12)
-    ax1.set_ylabel('Geometric Intercept Factor (%)', fontsize=12, color='#2ca02c')
-    ax1.tick_params(axis='y', labelcolor='#2ca02c')
-    ax1.grid(True, linestyle=':', alpha=0.7)
-
-    # 用红星标注最优点
-    ax1.plot(optimal_fl, max_intercept, marker='*', color='red', markersize=15, 
-             label=f'Optimal: F={optimal_fl:.2f}m, IF={max_intercept:.2f}%')
-    ax1.axvline(x=optimal_fl, color='red', linestyle='--', alpha=0.3)
-
-    # 创建边缘角副轴
-    ax2 = ax1.twinx()
-    line2 = ax2.plot(FOCAL_LENGTHS, rim_angles_deg, linestyle='--', color='#1f77b4', 
-                     linewidth=2, label='Rim Angle (deg)')
-    ax2.set_ylabel('Rim Angle (degrees)', fontsize=12, color='#1f77b4')
-    ax2.tick_params(axis='y', labelcolor='#1f77b4')
-
-    # --- 在 ax2 (边缘角轴) 上绘制推荐区间阴影 ---
-    ax2.axhspan(85, 95, color='orange', alpha=0.2, label='Recommended Rim Angle (85°-95°)')
-    
-    # 在 ax1 (焦距轴) 上同步绘制竖向填充，方便对齐
-    ax1.axvspan(f_start, f_end, color='gray', alpha=0.1, linestyle='--')
-
-    # 合并图例
-    lines, labels = ax1.get_legend_handles_labels()
-    lines2, labels2 = ax2.get_legend_handles_labels()
-    ax1.legend(lines + lines2, labels + labels2, loc='upper right', fontsize=10)
-
-    plt.title(f'Optimal Focal Length & Rim Angle\n(Aperture={APERTURE_WIDTH}m, DN80, SlopeErr=2.0mrad)', fontsize=14)
-    
-    plt.tight_layout()
-    plt.savefig('../out/optimal_focal_length.png', dpi=300)
-    print("图表已保存为 '../out/optimal_focal_length.png'")
-    # plt.show()
+    finally:
+        with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
+            json.dump(original_config, f, indent=4)
+        print("\n🔄 已将 config.json 恢复至原始状态。")
 
 if __name__ == "__main__":
     main()
