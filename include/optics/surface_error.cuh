@@ -3,13 +3,13 @@
 #include <curand_kernel.h>
 
 namespace Optics{
-    /*
-    * @brief 通用的高斯扰动函数，对目标向量添加sigma高斯分布的随机扰动
-    * @param vec 原始向量
-    * @param sigma 高斯分布的标准差（rad）
-    * @param state curand随机数状态
-    * @return float3 扰动后的新向量
-    */
+    /**
+     * @brief 通用的高斯扰动函数，对目标向量添加sigma高斯分布的随机扰动
+     * @param vec 原始向量
+     * @param sigma 高斯分布的标准差（rad）
+     * @param state curand随机数状态
+     * @return float3 扰动后的新向量
+     */
     inline __device__ float3 GaussianPerturb(
         const float3& vec,
         float sigma,

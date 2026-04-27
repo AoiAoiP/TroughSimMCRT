@@ -12,6 +12,11 @@
     "Sun": {
         "azimuth": 180.0,
         "zenith": 0.0,
+        "dir": [
+            0,
+            0,
+            1
+        ],
         "DNI": 1000.0,
         "shape": "DEFINED",
         "csv_path": "../resources/CSR-5.csv",
@@ -28,7 +33,7 @@
         ],
         "width": 8.61502,
         "reflectivity": 0.92,
-        "slope_error": 2,
+        "slope_error": 2.0,
         "specularity_error": 2.5,
         "bounds": [
             [

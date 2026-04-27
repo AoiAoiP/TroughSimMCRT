@@ -1,0 +1,3 @@
+/home/wzy/TroughSimMCRT/build/CMakeFiles/mcrt_sim.dir
+/home/wzy/TroughSimMCRT/build/CMakeFiles/edit_cache.dir
+/home/wzy/TroughSimMCRT/build/CMakeFiles/rebuild_cache.dir

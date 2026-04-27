@@ -20,6 +20,7 @@ struct SunConfig {
     float azimuth;
     float zenith;
     float DNI;
+    float3 dir;
     SunShapeType sunshape;
 
     union {

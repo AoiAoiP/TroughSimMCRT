@@ -27,6 +27,9 @@ SunConfig loadSunConfigToGPU(const std::string& filepath) {
     h_config.azimuth = sun_json["azimuth"].get<float>();
     h_config.zenith = sun_json["zenith"].get<float>();
     h_config.DNI = sun_json["DNI"].get<float>();
+    h_config.dir.x = sun_json["dir"][0].get<float>();
+    h_config.dir.y = sun_json["dir"][1].get<float>();
+    h_config.dir.z = sun_json["dir"][2].get<float>();
 
     std::string shape_str = sun_json["shape"].get<std::string>();
     h_config.sunshape = parseSunShapeType(shape_str);

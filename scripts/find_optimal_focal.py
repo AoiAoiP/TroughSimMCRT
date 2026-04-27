@@ -136,11 +136,12 @@ def main():
                 update_config(w, fl,original_config)
                 intercept = run_simulation()
                 rim_angle_deg = np.degrees(2 * np.arctan(w / (4 * fl)))
+                intercepted_power_per_meter = w * 1000.0 * (intercept / 100.0)
                 
-                results[w]['intercepts'].append(intercept)
+                results[w]['intercepts'].append(intercepted_power_per_meter)
                 results[w]['rim_angles'].append(rim_angle_deg)
                 # 可视化输出可按需取消注释
-                print(f"  F={fl:.2f}m -> IF={intercept:.2f}%, Rim={rim_angle_deg:.1f}°")
+                print(f"  F={fl:.2f}m -> IF_power={intercepted_power_per_meter:.2f}%, Rim={rim_angle_deg:.1f}°")
 
         # --- 绘图逻辑 ---
         fig, ax1 = plt.subplots(figsize=(12, 7))

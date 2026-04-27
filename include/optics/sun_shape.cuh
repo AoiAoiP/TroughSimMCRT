@@ -45,22 +45,48 @@ namespace Optics{
                 break;
         }
 
-        float3 sun_local_dir = make_float3(
-            sinf(theta) * cosf(phi),
-            sinf(theta) * sinf(phi),
-            -cosf(theta)
+        float3 w = config.dir;
+        float inv_len_w = rsqrtf(w.x*w.x + w.y*w.y + w.z*w.z);
+        w.x *= inv_len_w; 
+        w.y *= inv_len_w; 
+        w.z *= inv_len_w;
+
+        // 构建局部正交基底 (U, V, W)
+        float3 a;
+        if (fabsf(w.x) > 0.9f) {
+            a = make_float3(0.0f, 1.0f, 0.0f);
+        } else {
+            a = make_float3(1.0f, 0.0f, 0.0f);
+        }
+        float3 u_vec = make_float3(
+            a.y * w.z - a.z * w.y,
+            a.z * w.x - a.x * w.z,
+            a.x * w.y - a.y * w.x
+        );
+        float inv_len_u = rsqrtf(u_vec.x*u_vec.x + u_vec.y*u_vec.y + u_vec.z*u_vec.z);
+        u_vec.x *= inv_len_u; 
+        u_vec.y *= inv_len_u; 
+        u_vec.z *= inv_len_u;
+        float3 v_vec = make_float3(
+            w.y * u_vec.z - w.z * u_vec.y,
+            w.z * u_vec.x - w.x * u_vec.z,
+            w.x * u_vec.y - w.y * u_vec.x
         );
 
-        float s_zenith = config.zenith * PI / 180.0f;
-        float s_azimuth = config.azimuth * PI / 180.0f;
+        // 计算三角函数值 
+        float sin_theta, cos_theta;
+        sincosf(theta, &sin_theta, &cos_theta);
+        float sin_phi, cos_phi;
+        sincosf(phi, &sin_phi, &cos_phi);
 
-        float3 sun_center = make_float3(
-            sinf(s_zenith) * cosf(s_azimuth),
-            sinf(s_zenith) * sinf(s_azimuth),
-            -cosf(s_zenith)
+        // 将局部坐标映射为全局 3D 射线向量 (等效于local2world)
+        float3 global_dir = make_float3(
+            sin_theta * cos_phi * u_vec.x + sin_theta * sin_phi * v_vec.x + cos_theta * w.x,
+            sin_theta * cos_phi * u_vec.y + sin_theta * sin_phi * v_vec.y + cos_theta * w.y,
+            sin_theta * cos_phi * u_vec.z + sin_theta * sin_phi * v_vec.z + cos_theta * w.z
         );
 
-        return local2world(sun_local_dir, sun_center);
+        return global_dir;
     }
 }
 
