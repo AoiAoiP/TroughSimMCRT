@@ -114,19 +114,21 @@ int main(){
     float absorber_surface_area = 2.0f * PI * h_absorber_config.r * h_absorber_config.length;
     float bin_area = absorber_surface_area / (float)(h_sim_config.grid_res_x * h_sim_config.grid_res_z);
     float flux_scale_kW = (h_sun_config.DNI * aperture_area)/((float)N * bin_area) * 0.001f;
-    float total_intercepted_energy = 0.0f;
     for (int i = 0; i < grid_size; ++i) {
         h_flux_map[i] *= flux_scale_kW; // 转换为 kW/m^2
     }
+    float intercepted_power_kW = 0.0f;
     for (int i = 0; i < grid_size; ++i) {
-        total_intercepted_energy += h_flux_map[i];
+        intercepted_power_kW += h_flux_map[i] * bin_area;
     }
     float intercept_factor = (float)h_hit_count / (float)N;
-    float optical_efficiency = total_intercepted_energy / (float)(N*flux_scale_kW);
+    float incident_power_kW = h_sun_config.DNI * aperture_area * 0.001f;
+    float optical_efficiency = intercepted_power_kW / incident_power_kW;
     std::cout << "------------------------------------------\n";
     std::cout << "Physical Hits: " << h_hit_count << " / " << N << std::endl;
-    std::cout << "Intercept Factor: " << intercept_factor<< std::endl;
-    std::cout << "Optical Efficiency (kW/ Reflectivity): " << optical_efficiency * 100.0f << " %" << std::endl;
+    std::cout << "Intercept Factor: " << intercept_factor << std::endl;
+    std::cout << "Intercepted Power: " << intercepted_power_kW << " kW" << std::endl;
+    std::cout << "Optical Efficiency: " << optical_efficiency * 100.0f << " %" << std::endl;
     std::cout << "------------------------------------------\n";
 
     std::ofstream outfile("../out/flux_map.csv");
