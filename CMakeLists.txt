@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
-# 定义项目名称，并显式启用 C++ 和 CUDA 语言支持
 project(Parabolic_MCRT_Sim LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -12,8 +11,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_ARCHITECTURES 86)
 # ---------------------------------------------------------
 
-
-# 收集所有的 CUDA 实现文件 (.cu)
 set(MCRT_SOURCES
     src/main.cu
     src/trough_config.cu
@@ -23,7 +20,6 @@ set(MCRT_SOURCES
     src/random_pools.cu
 )
 
-# 收集所有的头文件 (.cuh)
 set(MCRT_HEADERS
     include/cu_math.cuh
     include/config/trough_config.cuh
@@ -40,7 +36,6 @@ set(MCRT_HEADERS
     include/app.cuh
 )
 
-# 创建可执行文件目标
 add_executable(mcrt_sim ${MCRT_SOURCES} ${MCRT_HEADERS})
 
 set_target_properties(mcrt_sim PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
