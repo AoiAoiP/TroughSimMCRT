@@ -1112,11 +1112,6 @@ inline __host__ __device__ float4 normalize(float4 v)
 ////////////////////////////////////////////////////////////////////////////////
 // distance
 ////////////////////////////////////////////////////////////////////////////////
-/*
-    @brief 计算两个点的距离
-    @param v 向量v
-    @return 向量长度
-*/
 inline __host__ __device__ float distance3(float3 a, float3 b)
 {
     return sqrtf(dot(a-b, a-b));
@@ -1135,7 +1130,7 @@ __device__ __forceinline__ float3 reflect(float3 I, float3 N)
 ////////////////////////////////////////////////////////////////////////////////
 inline __host__ __device__ float3 local2world(float3 local, float3 N)
 {
-    // 构建局部坐标系
+    // build local orthonormal basis (b1, b2, N) via Hughes-Moeller
     float3 b1,b2;
     if (N.z < -0.999999f)
     {
@@ -1148,10 +1143,7 @@ inline __host__ __device__ float3 local2world(float3 local, float3 N)
         b2 = make_float3(b, 1.0f - N.y * N.y * a, -N.y);
     }
 
-    // local_dir = (x,y,z)
-    // world_dir = x * b1 + y * b2 + z * N
-
-    // 从局部坐标系转换到世界坐标系
+    // world_dir = local.x * b1 + local.y * b2 + local.z * N
     return make_float3(
         local.x * b1.x + local.y * b2.x + local.z * N.x,
         local.x * b1.y + local.y * b2.y + local.z * N.y,

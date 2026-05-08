@@ -6,8 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ---------------------------------------------------------
-# CUDA 架构设置, 指定生成代码的 GPU 架构.
-#  75 :RTX 20 系，80 :A100/RTX 30 系，86:RTX 30/40 系
+# CUDA target architecture:
+#  75 : RTX 20 series,  80 : A100 / RTX 30 series,  86 : RTX 30/40 series
 set(CMAKE_CUDA_ARCHITECTURES 86)
 # ---------------------------------------------------------
 
@@ -40,18 +40,18 @@ add_executable(mcrt_sim ${MCRT_SOURCES} ${MCRT_HEADERS})
 
 set_target_properties(mcrt_sim PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
-# 设置头文件包含路径为当前源码目录
-target_include_directories(mcrt_sim PRIVATE 
+# Set header include path to source directory
+target_include_directories(mcrt_sim PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 
-# 针对不同语言配置特定的编译优化选项
+# Per-language compile optimisation options
 target_compile_options(mcrt_sim PRIVATE
     $<$<COMPILE_LANGUAGE:CUDA>:
-        -O3                   # 启用最高级别的优化
-        -use_fast_math        # 牺牲极微小的精度换取大量数学函数（如 sin, cos）的性能提升
-        --generate-line-info  # 保留行号信息，便于配合 Nsight Compute 进行性能分析，且不影响运行速度
+        -O3                   # Max optimisation level
+        -use_fast_math        # Trade tiny precision loss for much faster math (sin, cos, etc.)
+        --generate-line-info  # Keep line number info for Nsight Compute profiling
     >
     $<$<COMPILE_LANGUAGE:CXX>:
         -O3

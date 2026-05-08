@@ -12,47 +12,47 @@ namespace Geometry{
         rec.is_hit = false;
         rec.geometry_index = -1;
 
-        // 将光线参数化为 P(t) = origin + t * dir
-        // 集热管是一个圆柱面，满足 (P.x - config.position.x)^2 + (P.z - config.position.z)^2 = config.r^2
-        // 代入参数化方程得到二次方程：A*t^2 + B*t + C = 0
+        // parameterize ray as P(t) = origin + t * dir
+        // absorber tube is a cylinder: (P.x - pos.x)^2 + (P.z - pos.z)^2 = r^2
+        // substituting yields quadratic: A*t^2 + B*t + C = 0
         float A = dir.x * dir.x + dir.z * dir.z;
         if(A < 1e-8f) {
-            return rec; // 光线平行于集热管轴线，无交点
+            return rec; // ray parallel to absorber axis, no intersection
         }
         float B = 2.0f * ((origin.x - config.position.x) * dir.x + (origin.z - config.position.z) * dir.z);
         float C = (origin.x - config.position.x) * (origin.x - config.position.x) +
                   (origin.z - config.position.z) * (origin.z - config.position.z) -
                   config.r * config.r;
 
-        // solve t 
+        // solve t
         float t_hit;
         if (!solve_quadratic(A, B, C, t_hit)) {
-            return rec; // 无交点
+            return rec; // no intersection
         }
 
-        // 计算交点 P
+        // compute hit point P
         float3 P = make_float3(origin.x + t_hit * dir.x, origin.y + t_hit * dir.y, origin.z + t_hit * dir.z);
 
-        // 判断交点是否在集热管长度范围内
+        // clip to absorber tube length
         if (P.y < config.position.y - config.length * 0.5f || P.y > config.position.y + config.length * 0.5f) {
-            return rec; // 不在长度范围内
+            return rec; // outside the tube length
         }
-        
-        // calculate normal
-        // F(x,y,z) = (x - config.position.x)^2 + (z - config.position.z)^2 - config.r^2 = 0
-        // N = grad(F) = (2*(P.x - config.position.x), 0, 2*(P.z - config.position.z))
+
+        // surface normal for cylinder
+        // F(x,y,z) = (x - pos.x)^2 + (z - pos.z)^2 - r^2 = 0
+        // N = grad(F) = (2*(P.x - pos.x), 0, 2*(P.z - pos.z))
         float3 normal = make_float3(2.0f * (P.x - config.position.x), 0.0f, 2.0f * (P.z - config.position.z));
         normal = normalize(normal);
 
         if(dot(dir, normal) > 0.0f) {
-            normal = -normal; // 确保法线朝向入射光线
+            normal = -normal; // ensure normal faces the incoming ray
         }
 
         rec.is_hit = true;
         rec.t = t_hit;
         rec.hit_point = P;
         rec.normal = normal;
-        rec.geometry_index = 6; // 集热管的几何索引
+        rec.geometry_index = 6; // absorber tube geometry index
 
         return rec;
     }

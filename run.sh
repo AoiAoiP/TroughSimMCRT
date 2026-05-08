@@ -1,30 +1,29 @@
 #!/bin/bash
 
-# 设置：如果任何一条命令执行失败（报错），脚本立刻停止运行
 set -e
 
 echo "========================================"
-echo "🚀 1. 正在编译 CUDA MCRT 引擎..."
+echo " 1. Building CUDA MCRT engine..."
 echo "========================================"
 cd build
 make -j$(nproc)
 
 echo ""
 echo "========================================"
-echo "☀️  2. 正在执行能流仿真追踪..."
+echo " 2. Running flux simulation..."
 echo "========================================"
-# 生成的 flux_map.csv 会保存在 out 目录下
+# Output: flux_map.csv saved under out/ directory
 ./mcrt_sim
 
 echo ""
 echo "========================================"
-echo "📊 3. 正在生成 2D/3D 能流密度图..."
+echo " 3. Generating 2D/3D flux density plots..."
 echo "========================================"
 python ../scripts/paint_energy_distribution.py
 
 echo ""
 echo "========================================"
-echo "📊 4. 正在分析数据..."
+echo " 4. Running analysis scripts..."
 echo "========================================"
 python ../scripts/scan_intercept.py
 python ../scripts/scan_focal_length.py
@@ -34,5 +33,5 @@ cd ..
 
 echo ""
 echo "========================================"
-echo "🎉 全流程执行完毕！请查看 out 目录下的图片。"
+echo " Pipeline complete! Check the out/ directory for results."
 echo "========================================"

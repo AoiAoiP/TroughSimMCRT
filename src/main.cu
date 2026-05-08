@@ -39,7 +39,7 @@ __global__ void render(float* d_flux_map,int* d_hit_count){
         int bin_x = (int)((hit_angle / (2.0f * PI)) * d_sim_config.grid_res_x);
         int bin_z = (int)(((hit.hit_point.y - d_absorber_config.position.y+ d_absorber_config.length * 0.5f) / d_absorber_config.length) * d_sim_config.grid_res_z);
 
-        // 边界保护
+        // clamp to valid grid bounds
         bin_x = min(max(bin_x, 0), d_sim_config.grid_res_x - 1);
         bin_z = min(max(bin_z, 0), d_sim_config.grid_res_z - 1);
 
@@ -115,7 +115,7 @@ int main(){
     float bin_area = absorber_surface_area / (float)(h_sim_config.grid_res_x * h_sim_config.grid_res_z);
     float flux_scale_kW = (h_sun_config.DNI * aperture_area)/((float)N * bin_area) * 0.001f;
     for (int i = 0; i < grid_size; ++i) {
-        h_flux_map[i] *= flux_scale_kW; // 转换为 kW/m^2
+        h_flux_map[i] *= flux_scale_kW; // convert to kW/m^2
     }
     float intercepted_power_kW = 0.0f;
     for (int i = 0; i < grid_size; ++i) {
@@ -135,14 +135,14 @@ int main(){
     if (outfile.is_open()) {
         for (int z = 0; z < h_sim_config.grid_res_z; ++z) {
             for (int x = 0; x < h_sim_config.grid_res_x; ++x) {
-                // 一维索引转二维坐标
+                // flatten 2D grid index to 1D
                 int index = z * h_sim_config.grid_res_x + x;
                 outfile << h_flux_map[index];
                 if (x != h_sim_config.grid_res_x - 1) {
                     outfile << ",";
                 }
             }
-            outfile << "\n"; // 换行
+            outfile << "\n";
         }
         outfile.close();
         std::cout << "Flux map successfully saved to 'out/flux_map.csv'." << std::endl;

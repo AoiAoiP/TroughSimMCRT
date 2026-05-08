@@ -3,9 +3,7 @@
 #include "config/trough_config.cuh"
 
 namespace Geometry{
-    /*
-    * @brief 根据随机数采样镜面表面点
-    */
+    // Sample a point uniformly over the 6-submirror trough surface
     inline __device__ float3 sampleTrough(float u1,float u2,
         const ParabolicTroughConfig& config,
         int& mirror_id
@@ -17,16 +15,16 @@ namespace Geometry{
         #pragma unroll
         for(int i = 0;i<NUM_SUB_MIRRORS;++i){
             float segment_w = config.bounds[i].y - config.bounds[i].x;
-        
-            // 如果 target 落在当前子镜的累加宽度范围内
+
+            // find which mirror segment the target falls in
             if (target_w < accumulated_w + segment_w) {
-                // 计算在当前子镜内部的局部随机比例 (0.0 到 1.0 之间)
+                // local fraction inside the current segment [0, 1]
                 float local_u = (target_w - accumulated_w) / segment_w;
-                
-                // 映射到真实的全局 x 坐标
+
+                // map to global x coordinate
                 x = config.bounds[i].x + local_u * segment_w;
                 mirror_id = i;
-                break; 
+                break;
             }
             accumulated_w += segment_w;
         }
@@ -36,13 +34,8 @@ namespace Geometry{
         return make_float3(x,y,z);
     }
 
-    /*
-    * @brief 光线与分段槽式抛物面核心求交函数
-    * @param origin 光线起点
-    * @param dir 光线方向（必须归一化）
-    * @param config 抛物面参数配置（in 常量内存）
-    * @return HitInfo 相交结果
-    */
+    // Ray vs. segmented parabolic trough intersection
+    // F(x,y,z) = x^2 - 4*f*z = 0  (parabolic cylinder along y)
     inline __device__ HitInfo intersectTrough(
         const float3& origin,
         const float3& dir,
@@ -61,7 +54,7 @@ namespace Geometry{
         // solve t
         float t_hit;
         if(!solve_quadratic(a, b, c, t_hit)) {
-            return rec; // 无交点
+            return rec; // no intersection
         }
 
         // calculate hit point
@@ -91,7 +84,7 @@ namespace Geometry{
         normal = normalize(normal);
 
         if(dot(dir, normal) > 0.0f) {
-            normal = -normal; // 确保法线朝向入射光线
+            normal = -normal; // ensure normal faces the incoming ray
         }
 
         // return value

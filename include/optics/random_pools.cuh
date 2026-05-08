@@ -24,22 +24,22 @@ namespace Optics {
     }
 
     /**
-     * @brief 在 CPU 端生成随机数（或 Halton 序列）并拷贝至 GPU 显存
-     * @param pool_size 随机数对的数量
-     * @param num_rays 仿真光线总数 (用于生成等长的 RSIA)
+     * @brief Generate random numbers on CPU and upload to GPU memory
+     * @param pool_size Number of random float2 pairs in the pool
+     * @param num_rays Total ray count (for generating equal-length RSIA array)
      */
     void initRandomPools(int pool_size = POOL_SIZE, int num_rays = 0);
-    
+
     /**
-     * @brief 释放显存
+     * @brief Free GPU memory
      */
     void freeRandomPools();
 
     /**
-     * @brief 获取高质量的预计算随机数对 (核心查表函数)
-     * @param ray_id 当前光线的全局 ID (tid)
-     * @param dimension 当前采样的物理阶段 (0:起点采样, 1:太阳采样, 2:面形误差采样...)
-     * @return float2 两个独立的 [0, 1) 均匀分布随机数
+     * @brief Fetch a precomputed random float2 pair (core lookup function)
+     * @param ray_id Current ray's global thread ID
+     * @param dimension Sampling stage (0: origin, 1: sun shape, 2: surface error)
+     * @return float2 Two independent uniform random values in [0, 1)
      */
     __device__ __forceinline__ float2 get_random_pair(int ray_id, int dimension) {
         

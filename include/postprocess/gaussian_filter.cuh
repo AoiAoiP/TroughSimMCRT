@@ -9,20 +9,20 @@ namespace PostProcess {
     #endif
 
     /**
-     * @brief 高斯滤波配置参数
+     * @brief Gaussian filter configuration
      */
     struct GaussianConfig {
-        int radius;    // 滤波半径 (例如 radius=2 意味着 5x5 的卷积核)
-        float sigma;   // 高斯分布标准差
+        int radius;    // filter kernel radius (e.g. radius=2 means 5x5 kernel)
+        float sigma;   // Gaussian standard deviation
     };
 
     /**
-     * @brief 执行 2D 高斯滤波的 CUDA Kernel
-     * * @param d_input_flux   原始输入能流密度网格
-     * @param d_output_flux  平滑后的能流密度网格
-     * @param grid_res_x     X方向(环向)网格数
-     * @param grid_res_z     Z方向(轴向)网格数
-     * @param config         高斯配置参数
+     * @brief 2D Gaussian filter CUDA kernel
+     * @param d_input_flux   Raw input flux density grid
+     * @param d_output_flux  Smoothed output flux density grid
+     * @param grid_res_x     Grid resolution along circumferential (X) direction
+     * @param grid_res_z     Grid resolution along axial (Z) direction
+     * @param config         Gaussian configuration
      */
     __global__ void gaussian_filter_2d_kernel(
         const float* d_input_flux,
@@ -43,21 +43,20 @@ namespace PostProcess {
         float sigma = config.sigma;
         float sigma22 = 2.0f * sigma * sigma;
 
-        // 遍历 (2r+1) x (2r+1) 的高斯核邻域
+        // iterate over (2r+1) x (2r+1) Gaussian kernel neighbourhood
         for (int dz = -r; dz <= r; ++dz) {
             for (int dx = -r; dx <= r; ++dx) {
-                
-                // 1. Z 轴 (轴向) 处理：Clamp 边界保护 (不越过管子两端)
+
+                // 1. Axial (Z) boundary: clamp to prevent crossing tube ends
                 int neighbor_z = min(max(z + dz, 0), grid_res_z - 1);
 
-                // 2. X 轴 (环向) 处理：Periodic 周期循环边界 (圆柱面缝合)
-                // 巧妙利用取模和加法，处理 dx 为负数的情况
+                // 2. Circumferential (X) boundary: periodic wrap-around (cylinder seam)
                 int neighbor_x = (x + dx) % grid_res_x;
                 if (neighbor_x < 0) neighbor_x += grid_res_x;
 
                 int neighbor_idx = neighbor_z * grid_res_x + neighbor_x;
 
-                // 3. 计算高斯空间权重
+                // 3. Compute Gaussian spatial weight
                 // w = exp(-(dx^2 + dz^2) / (2 * sigma^2))
                 float weight = expf(-(float)(dx * dx + dz * dz) / sigma22);
 
@@ -66,35 +65,35 @@ namespace PostProcess {
             }
         }
 
-        // 将归一化后的平滑值写入新网格
+        // write normalized smoothed value to output grid
         int current_idx = z * grid_res_x + x;
         d_output_flux[current_idx] = sum_energy / sum_weight;
     }
 
     /**
-     * @brief 供主机端调用的启动函数
+     * @brief Host-side launch wrapper
      */
     void applyGaussianFilter(float* d_flux_map, int res_x, int res_z, int radius, float sigma) {
         
         size_t size = res_x * res_z * sizeof(float);
         
-        // 申请一块临时显存用于存放平滑结果
+        // allocate temporary GPU buffer for smoothed result
         float* d_temp_flux;
         cudaMalloc((void**)&d_temp_flux, size);
 
-        // 设置 2D Block 维度
+        // configure 2D block/grid dimensions
         dim3 blockSize(16, 16);
         dim3 gridSize((res_x + blockSize.x - 1) / blockSize.x, 
                       (res_z + blockSize.y - 1) / blockSize.y);
 
         GaussianConfig config = {radius, sigma};
 
-        // 启动高斯滤波 Kernel
+        // launch gaussian filter kernel
         gaussian_filter_2d_kernel<<<gridSize, blockSize>>>(d_flux_map, d_temp_flux, res_x, res_z, config);
         
         cudaDeviceSynchronize();
 
-        // 将平滑后的数据拷回原数组
+        // copy smoothed result back to original array
         cudaMemcpy(d_flux_map, d_temp_flux, size, cudaMemcpyDeviceToDevice);
 
         cudaFree(d_temp_flux);

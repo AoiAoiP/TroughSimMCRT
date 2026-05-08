@@ -29,8 +29,8 @@ struct SunConfig {
     } params;
 
     int table_size;
-    float* d_cdf_angles;     // 设备上的CDF角度（mrad）
-    float* d_cdf_values;    // 设备上的CDF值
+    float* d_cdf_angles;     // device-side CDF theta angles (mrad)
+    float* d_cdf_values;    // device-side CDF values
 };
 
 extern __constant__ SunConfig d_sun_config;

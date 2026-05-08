@@ -79,10 +79,9 @@ SunConfig loadSunConfigToGPU(const std::string& filepath) {
         }
         cdf[0]=0.0f;
 
-        // 归一化
+        // normalize
         for(int i = 0; i < N; ++i) {
             cdf[i] /= sum;
-            // std::cout<<"Angle: "<<angles[i]<<" mrad, Intensity: "<<intensities[i]<<", CDF: "<<cdf[i]<<std::endl;
         }
 
         cudaMalloc(&h_config.d_cdf_angles, N * sizeof(float));

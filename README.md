@@ -1,64 +1,173 @@
-# 使用CUDA-MCRT的槽式CSP系统热仿真
-## 项目介绍
-本项目是一个基于 CUDA 加速 的蒙特卡洛光线追踪（MCRT）热仿真求解器，专门针对槽式抛物面太阳能集热器（Parabolic Trough Solar Collector, PTSC）的集热管外表面能流密度分布进行高精度、高并发的计算分析。
+# Parabolic Trough Solar Collector — CUDA-Accelerated MCRT Thermal Simulation
 
-## 核心特性
-- 使用高性能 GPU 并行计算，设计了基于纯 CUDA C++ 的反向光线追踪实现算法，支持千万级至亿级光线的毫秒级仿真。
-- 引入预生成的微定日镜法线池 (MHNP) 和太阳形状池 (SSP)，有效避免了在 Kernel 函数中高频调用随机数生成器（如 `curand`），大幅提升计算效率与精度。
-- 精准的几何建模：
-- - 支持一元二次方程的鲁棒求根公式（解决浮点数精度相消问题）。
-- - 抛物面与圆柱面（集热管）的高效极致内联求交逻辑。
-- - 支持多块子镜拼接的边界判定拦截。
-- 多模型太阳形状：支持 Uniform、Gaussian、Buie (CSR) 太阳模型建模，也支持自定义太阳模型导入。*如果使用Buie模型，必须导入自定义模型。*
-- 结果滤波：使用高斯滤波，对蒙特卡洛采样造成的结果噪声进行过滤，使得能流分布结果平滑
+A high-performance GPU-accelerated Monte Carlo Ray Tracing (MCRT) solver for computing the flux density distribution on the outer surface of absorber tubes in Parabolic Trough Solar Collectors (PTSC).
 
-## 环境依赖
-在编译和运行本项目之前，请确保您的系统已安装以下环境：
-- **编译器**: 支持 C++17 的宿主编译器 (GCC 9.0+ 或 MSVC)
-- **CUDA Toolkit**: 11.0 或更高版本
-- **CMake**: 3.18 及以上
-- **Python**: Python 3.8+ (仅用于运行可视化脚本，需安装 `numpy`, `matplotlib`, `pandas`)
+## Overview
 
-## 编译与构建
-本项目采用标准的 CMake 构建系统，在终端中执行以下命令进行编译：
-```
+This solver uses **backward ray tracing**: rays originate from the absorber tube, reflect off the parabolic mirror segments toward the sun direction. Only rays that actually reach the absorber are counted, making the computation efficient and physically accurate.
+
+## Key Features
+
+- **GPU-accelerated**: Pure CUDA C++ implementation supporting tens of millions of rays with millisecond-level simulation times.
+- **Pre-generated random pools**: MT19937-based random float2 pairs and per-ray random start indices (RSIA) are precomputed on the CPU and stored in GPU global memory, avoiding expensive `curand` calls inside the kernel.
+- **Accurate geometry modeling**:
+  - Robust quadratic root solver using `-0.5·(b ± √D)` formulation to avoid floating-point catastrophic cancellation.
+  - Efficient inline ray-paraboloid and ray-cylinder intersection routines.
+  - 6-segment sub-mirror support with boundary clipping.
+- **Multiple sun shape models**: Uniform, Gaussian, Buie (CSR), and custom-defined sun shape via CSV lookup tables.
+- **Gaussian post-processing**: A 5×5 separable Gaussian filter kernel smooths Monte Carlo noise. The circumferential direction uses periodic boundary conditions (cylinder wrap-around); the axial direction uses clamped boundaries.
+- **Physical output**: Flux density calibrated to kW/m², intercept factor, and optical efficiency are computed and reported.
+
+## Requirements
+
+- **Host compiler**: GCC 9.0+ with C++17 support (or MSVC)
+- **CUDA Toolkit**: 11.0 or later
+- **CMake**: 3.18 or later
+- **Python**: 3.8+ (for visualization and parameter-scan scripts)
+- **Python packages**: `numpy`, `matplotlib` (and optionally `pandas` for annual simulation)
+
+## Quick start
+
+```bash
+# Clone the repository
 git clone https://github.com/AoiAoiP/TroughSimMCRT.git
 cd TroughSimMCRT
 
+# Build
 mkdir build && cd build
+cmake .. && make -j$(nproc)
 
-cmake ..
+# Run simulation (single shot)
+./mcrt_sim
 
-make -j8
-```
-
-## 运行与可视化
-编译成功后，可执行文件将生成在 build 目录下。
-### 1. 运行仿真核心
-```
-# 在 build 目录下运行
-./TroughSimMCRT
-```
-程序将自动读取 `resources/config.json` 中的参数，开始执行 MCRT 仿真，并在完成后将能流密度数据输出到 CSV 文件中。
-### 2. 结果可视化
-仿真结束后，可以通过提供的 Python 脚本将 CSV 文件渲染为热力图/能流分布图。
-```
-# 返回项目根目录
-cd ..
-# 运行可视化脚本 (请确保已安装必要的 Python 绘图库)
-python scripts/paint_energy_distribution.py
+# Or run the full pipeline (build + sim + plots + analysis)
+cd .. && ./run.sh
 ```
 
-### 3. 一步到位（Linux环境）
-如果是Linux环境，直接运行`run.sh`即可。
+The simulation reads `resources/config.json` and writes the flux map CSV to the `out/` directory.
+
+## Repository structure
+
 ```
-# 直接运行一键脚本
-./run.sh
+.
+├── CMakeLists.txt                  # CMake build configuration (CUDA SM 86)
+├── run.sh                          # One-shot pipeline script
+├── README.md
+├── CLAUDE.md                       # Project development guide (Chinese)
+├── resources/
+│   ├── config.json                 # Main simulation configuration
+│   ├── CSR-5.csv                   # Buie sun shape data (if applicable)
+│   └── 738_sundir_year.txt         # Annual sun direction data
+├── include/
+│   ├── app.cuh                     # Master header; SamplingDimension enum
+│   ├── cu_math.cuh                 # CUDA vector math library (float2/3/4 operators)
+│   ├── config/
+│   │   ├── json.hpp                # nlohmann JSON library (single header)
+│   │   ├── trough_config.cuh       # ParabolicTroughConfig struct + loader
+│   │   ├── absorber_config.cuh     # AbsorberConfig struct + loader
+│   │   ├── sun_config.cuh          # SunConfig struct + loader + SunShapeType enum
+│   │   ├── sim_config.cuh          # SimConfig struct + loader
+│   │   └── sample_vMF.cuh          # von Mises-Fisher sampling (unused by kernel)
+│   ├── geometry/
+│   │   ├── geometry_func.cuh       # HitInfo struct + robust solve_quadratic()
+│   │   ├── trough_intersect.cuh    # sampleTrough() + intersectTrough()
+│   │   └── absorber_intersect.cuh  # intersectAbsorber()
+│   ├── optics/
+│   │   ├── random_pools.cuh        # Random pool declarations + hash_index() + get_random_pair()
+│   │   ├── sun_shape.cuh           # SampleSunshape() + SampleThetaFromcdf()
+│   │   └── surface_error.cuh       # GaussianPerturb() (Box-Muller)
+│   └── postprocess/
+│       └── gaussian_filter.cuh     # 5×5 Gaussian filter kernel + host wrapper
+├── src/
+│   ├── main.cu                     # render() kernel + main() pipeline
+│   ├── trough_config.cu            # loadTroughConfigToGPU()
+│   ├── sun_config.cu               # loadSunConfigToGPU()
+│   ├── absorber_config.cu          # loadAbsorberConfigToGPU()
+│   ├── sim_config.cu               # loadSimConfigToGPU()
+│   └── random_pools.cu             # initRandomPools() + freeRandomPools()
+└── scripts/
+    ├── paint_energy_distribution.py # 2D heatmap + 3D surface plot
+    ├── scan_intercept.py            # Slope error × tube diameter parameter scan
+    ├── scan_focal_length.py         # Focal length sensitivity scan
+    ├── find_optimal_focal.py        # Multi-aperture × focal length joint optimisation
+    └── annual_sim.py                # Annual energy-weighted intercept factor
 ```
 
-## 参数配置说明
-本项目的核心仿真参数通过 `resources/config.json` 进行管理，修改此文件无需重新编译代码。核心配置项说明：
-- `sim_config`: 设置总光线数、CUDA Block Size、Grid 策略等。
-- `trough_config`: 设置抛物面的焦距、长度、宽度、镜面误差及子镜拼接边界。
-- `absorber_config`: 集热管的几何参数（如内径、长度尺寸、空间坐标等）。
-- `sun_shape`: 选择太阳模型（Buie/Gaussian等）以及对应模型的误差角。
+## Configuration reference (`resources/config.json`)
+
+### Simulation
+| Key | Description | Typical value |
+|-----|-------------|---------------|
+| `total_rays` | Number of Monte Carlo rays | `10000000` |
+| `block_size` | CUDA thread block size | `256` |
+| `grid_res_z` | Axial grid bins | `100` |
+| `grid_res_x` | Circumferential grid bins | `60` |
+
+### ParabolicTrough
+| Key | Description | Typical value |
+|-----|-------------|---------------|
+| `focal_length` | Focal length (m) | `1.7` |
+| `length` | Trough length (m) | `1.8` |
+| `width` | Gross aperture width (m) | `8.615` |
+| `reflectivity` | Mirror reflectivity | `0.92` |
+| `slope_error` | RMS slope error (mrad) | `2.0` |
+| `specularity_error` | RMS specularity error (mrad) | `2.5` |
+| `bounds` | 6 sub-mirror X intervals | See config |
+
+### Absorber
+| Key | Description | Typical value |
+|-----|-------------|---------------|
+| `r` | Tube radius (m) | `0.045` |
+| `position` | Tube centre [X, Y, Z] (m) | `[0.019, 0.9, 1.7]` |
+| `length` | Tube length (m) | `1.9` |
+
+### Sun
+| Key | Description | Typical value |
+|-----|-------------|---------------|
+| `azimuth` / `zenith` | Sun position (deg) | `180.0` / `0.0` |
+| `dir` | Sun direction vector | `[0, 0, 1]` |
+| `DNI` | Direct normal irradiance (W/m²) | `1000.0` |
+| `shape` | Sun shape model | `UNIFORM`, `GAUSSIAN`, `BUIE`, `DEFINED` |
+| `csv_path` | Path to CSV sun shape data (Buie/Defined) | `../resources/CSR-5.csv` |
+
+## Coordinate convention
+
+- **X**: Parabolic trough width (horizontal), following `z = x² / (4f)`
+- **Y**: Trough/tube length direction (axial)
+- **Z**: Vertical / parabolic depth direction
+
+The trough mirror centre is at Y = 0.9 m; the absorber tube centre is at (X = 0.019, Y = 0.9, Z = 1.7) m.
+
+## Physical model
+
+The total equivalent surface error is computed as:
+
+```
+σ_total = sqrt(4 × σ_slope² + σ_specularity²)  [mrad → rad: × 0.001]
+```
+
+Flux calibration:
+
+```
+flux [kW/m²] = hits × ρ_reflectivity × DNI × A_aperture / (N_rays × A_bin)
+```
+
+where `A_bin = 2πr × L_tube / (grid_res_x × grid_res_z)`.
+
+Circumferential binning uses `atan2(P.x - centre.x, P.z - centre.z) / 2π`, wrapping around [0, 2π).
+
+## Known issues
+
+- The flux summation energy computation in `main.cu` (lines 117–125) has a dimensional inconsistency: it sums flux (kW/m²) directly as if it were energy.
+- `SampleThetaFromcdf` uses binary search over a CDF table, which causes warp-divergent branching. A uniform-resampling lookup table would be faster.
+- The statistical quality of `hash_index` in `random_pools.cuh` has not been rigorously verified.
+- The kernel lacks `cudaDeviceSynchronize()` for catching asynchronous execution errors.
+
+## Building notes
+
+- CUDA target architecture: SM 86 (RTX 30/40 series). Adjust `CMAKE_CUDA_ARCHITECTURES` in `CMakeLists.txt` for your GPU.
+- `-use_fast_math` is enabled for the CUDA compiler — this trades a tiny amount of floating-point accuracy for significant speedups in transcendental functions (sin, cos, sqrt, etc.).
+
+## License
+
+This project is for research purposes. Contact the author for licensing details.
