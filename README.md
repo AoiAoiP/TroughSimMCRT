@@ -1,3 +1,7 @@
+<p align="right">
+  <a href="README.md">English</a> | <a href="README_CN.md">简体中文</a>
+</p>
+
 # Parabolic Trough Solar Collector — CUDA-Accelerated MCRT Thermal Simulation
 
 A high-performance GPU-accelerated Monte Carlo Ray Tracing (MCRT) solver for computing the flux density distribution on the outer surface of absorber tubes in Parabolic Trough Solar Collectors (PTSC).
@@ -52,8 +56,9 @@ The simulation reads `resources/config.json` and writes the flux map CSV to the 
 .
 ├── CMakeLists.txt                  # CMake build configuration (CUDA SM 86)
 ├── run.sh                          # One-shot pipeline script
-├── README.md
-├── CLAUDE.md                       # Project development guide (Chinese)
+├── README.md                       # English documentation
+├── README_CN.md                    # Chinese documentation (简体中文)
+├── CLAUDE.md                       # Project development guide
 ├── resources/
 │   ├── config.json                 # Main simulation configuration
 │   ├── CSR-5.csv                   # Buie sun shape data (if applicable)
