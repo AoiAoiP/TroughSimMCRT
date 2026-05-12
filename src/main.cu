@@ -5,25 +5,27 @@ __global__ void render(float* d_flux_map,int* d_hit_count){
     unsigned long long idx = blockIdx.x * blockDim.x + threadIdx.x;
     if(idx >= d_sim_config.total_rays) return;
 
-    // get ray_origin & normal
+    // get ray_origin & normal (ideal parabola, before torsion)
     float f = d_trough_config.focal_length;
     float2 rand_origin = Optics::get_random_pair(idx,DIM_ORIGIN_GEN);
     int mirror_index;
-    float3 ray_origin = Geometry::sampleTrough(rand_origin.x,rand_origin.y,d_trough_config,mirror_index);
-    float3 normal_ideal = normalize(make_float3(-ray_origin.x/(2.0f*f),0.0f,1.0f));
-    float torsion_rad = Geometry::computeTorsionAngle(ray_origin.y, d_trough_config.torsion_error);
-    float3 normal_torsion;
-    if (fabsf(torsion_rad) > 1e-9f) {
-        float sin_t, cos_t;
-        sincosf(torsion_rad, &sin_t, &cos_t);
-        normal_torsion = make_float3(
-            normal_ideal.x * cos_t + normal_ideal.z * sin_t,
-            normal_ideal.y,
-            -normal_ideal.x * sin_t + normal_ideal.z * cos_t
-        );
-    } else {
-        normal_torsion = normal_ideal;
-    }
+    float3 ray_origin_ideal = Geometry::sampleTrough(rand_origin.x, rand_origin.y, d_trough_config, mirror_index);
+    float3 normal_ideal = normalize(make_float3(-ray_origin_ideal.x / (2.0f * f), 0.0f, 1.0f));
+
+    float torsion_rad = Geometry::computeTorsionAngle(ray_origin_ideal.y, d_trough_config.torsion_error);
+    float sin_t, cos_t;
+    sincosf(torsion_rad, &sin_t, &cos_t);
+    float3 ray_origin = make_float3(
+        ray_origin_ideal.x * cos_t + ray_origin_ideal.z * sin_t,
+        ray_origin_ideal.y,
+        -ray_origin_ideal.x * sin_t + ray_origin_ideal.z * cos_t
+    );
+    float3 normal_torsion = make_float3(
+        normal_ideal.x * cos_t + normal_ideal.z * sin_t,
+        normal_ideal.y,
+        -normal_ideal.x * sin_t + normal_ideal.z * cos_t
+    );
+    
 
     // get ray_in
     float2 rand_sun = Optics::get_random_pair(idx,DIM_SUN_SHAPE);

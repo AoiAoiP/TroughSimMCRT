@@ -21,7 +21,7 @@
         "shape": "NONE",
         "csv_path": "../resources/CSR-5.csv",
         "theta_max": 90.0,
-        "sigma": 5.0
+        "sigma": 4.65
     },
     "ParabolicTrough": {
         "focal_length": 1.49,
@@ -80,7 +80,7 @@
         ]
     },
     "Absorber": {
-        "r": 0.045,
+        "r": 0.035,
         "position": [
             0.0,
             50.0,
