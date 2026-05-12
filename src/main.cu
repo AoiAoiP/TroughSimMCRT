@@ -9,23 +9,8 @@ __global__ void render(float* d_flux_map,int* d_hit_count){
     float f = d_trough_config.focal_length;
     float2 rand_origin = Optics::get_random_pair(idx,DIM_ORIGIN_GEN);
     int mirror_index;
-    float3 ray_origin_ideal = Geometry::sampleTrough(rand_origin.x, rand_origin.y, d_trough_config, mirror_index);
-    float3 normal_ideal = normalize(make_float3(-ray_origin_ideal.x / (2.0f * f), 0.0f, 1.0f));
-
-    float torsion_rad = Geometry::computeTorsionAngle(ray_origin_ideal.y, d_trough_config.torsion_error);
-    float sin_t, cos_t;
-    sincosf(torsion_rad, &sin_t, &cos_t);
-    float3 ray_origin = make_float3(
-        ray_origin_ideal.x * cos_t + ray_origin_ideal.z * sin_t,
-        ray_origin_ideal.y,
-        -ray_origin_ideal.x * sin_t + ray_origin_ideal.z * cos_t
-    );
-    float3 normal_torsion = make_float3(
-        normal_ideal.x * cos_t + normal_ideal.z * sin_t,
-        normal_ideal.y,
-        -normal_ideal.x * sin_t + normal_ideal.z * cos_t
-    );
-    
+    float3 ray_origin = Geometry::sampleTrough(rand_origin.x, rand_origin.y, d_trough_config, mirror_index);
+    float3 normal = normalize(make_float3(-ray_origin.x / (2.0f * f), 0.0f, 1.0f));
 
     // get ray_in
     float2 rand_sun = Optics::get_random_pair(idx,DIM_SUN_SHAPE);
@@ -40,8 +25,18 @@ __global__ void render(float* d_flux_map,int* d_hit_count){
 
     ray_in = -ray_in;
 
+    // apply torsion on ray_in
+    float torsion_rad = Geometry::computeTorsionAngle(ray_origin.y, d_trough_config.torsion_error);
+    float sin_t,cos_t;
+    sincosf(-torsion_rad,&sin_t,&cos_t);
+    ray_in = make_float3(
+        ray_in.x * cos_t + ray_in.z *sin_t,
+        ray_in.y,
+        -ray_in.x * sin_t + ray_in.z *cos_t
+    );
+
     // get ray_ref
-    float3 ray_ref_ideal = reflect(ray_in, normal_torsion);
+    float3 ray_ref_ideal = reflect(ray_in, normal);
     float sigma_total = sqrtf(4*d_trough_config.slope_error*d_trough_config.slope_error+d_trough_config.specularity_error*d_trough_config.specularity_error)*0.001f; // transfer mrad to rad
     float2 rand_pert = Optics::get_random_pair(idx,DIM_PERT_ERR);
     float3 ray_ref = normalize(Optics::GaussianPerturb(ray_ref_ideal,sigma_total,rand_pert.x,rand_pert.y));
