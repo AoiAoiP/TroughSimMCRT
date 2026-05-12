@@ -10,6 +10,7 @@
 #include "cu_math.cuh"
 
 enum class SunShapeType {
+    NONE,
     UNIFORM,
     GAUSSIAN,
     BUIE,

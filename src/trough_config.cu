@@ -1,4 +1,7 @@
 #include "config/trough_config.cuh"
+#include <vector>
+#include <string>
+#include <cstring>
 
 using json = nlohmann::json;
 
@@ -25,6 +28,49 @@ ParabolicTroughConfig loadTroughConfigToGPU(const std::string& filepath) {
     h_config.reflectivity = pt_json["reflectivity"].get<float>();
     h_config.slope_error = pt_json["slope_error"].get<float>();
     h_config.specularity_error = pt_json["specularity_error"].get<float>();
+
+    // --- torsion error parsing ---
+    h_config.torsion_error.type = TorsionErrorConfig::NONE;
+    h_config.torsion_error.y_pos = nullptr;
+    h_config.torsion_error.torsion_values = nullptr;
+    h_config.torsion_error.table_size = 0;
+    std::memset(h_config.torsion_error.coefficients, 0, sizeof(h_config.torsion_error.coefficients));
+
+    if (pt_json.contains("torsion_error")) {
+        auto te_json = pt_json["torsion_error"];
+        std::string te_type_str = te_json.value("type", "none");
+
+        if (te_type_str == "polynomial") {
+            h_config.torsion_error.type = TorsionErrorConfig::POLYNOMIAL;
+            if (te_json.contains("coefficients")) {
+                auto coeffs = te_json["coefficients"];
+                int n = std::min((int)coeffs.size(), 4);
+                for (int i = 0; i < n; ++i) {
+                    h_config.torsion_error.coefficients[i] = coeffs[i].get<float>();
+                }
+            }
+        } else if (te_type_str == "lookup") {
+            h_config.torsion_error.type = TorsionErrorConfig::LOOKUP;
+            auto y_positions = te_json["y_positions"];
+            auto torsion_values = te_json["torsion_values"];
+            int N = y_positions.size();
+
+            std::vector<float> h_y_pos(N);
+            std::vector<float> h_torsion(N);
+            for (int i = 0; i < N; ++i) {
+                h_y_pos[i] = y_positions[i].get<float>();
+                h_torsion[i] = torsion_values[i].get<float>();
+            }
+
+            h_config.torsion_error.table_size = N;
+            cudaMalloc(&h_config.torsion_error.y_pos, N * sizeof(float));
+            cudaMalloc(&h_config.torsion_error.torsion_values, N * sizeof(float));
+            cudaMemcpy(h_config.torsion_error.y_pos, h_y_pos.data(), N * sizeof(float), cudaMemcpyHostToDevice);
+            cudaMemcpy(h_config.torsion_error.torsion_values, h_torsion.data(), N * sizeof(float), cudaMemcpyHostToDevice);
+        }
+        // "none" or unknown: keep defaults (NONE, nullptrs, zeros)
+    }
+
     h_config.valid_width = 0;
     auto bounds = pt_json["bounds"];
     for(int i = 0; i < NUM_SUB_MIRRORS; ++i) {

@@ -6,6 +6,15 @@
 
 #define NUM_SUB_MIRRORS 6
 
+struct TorsionErrorConfig{
+    enum Type { NONE, POLYNOMIAL, LOOKUP};
+    Type type;
+    float coefficients[4];
+    float* y_pos;
+    float* torsion_values;
+    int table_size;
+};
+
 struct ParabolicTroughConfig {
     float focal_length;
     float length;
@@ -18,6 +27,7 @@ struct ParabolicTroughConfig {
     float reflectivity;
     float slope_error;
     float specularity_error;
+    TorsionErrorConfig torsion_error;
 };
 
 extern __constant__ ParabolicTroughConfig d_trough_config;

@@ -5,6 +5,7 @@ __constant__ SunConfig d_sun_config;
 using json = nlohmann::json;
 
 SunShapeType parseSunShapeType(const std::string& type_str) {
+    if (type_str == "NONE") return SunShapeType::NONE;
     if (type_str == "UNIFORM") return SunShapeType::UNIFORM;
     if (type_str == "GAUSSIAN") return SunShapeType::GAUSSIAN;
     if (type_str == "BUIE") return SunShapeType::BUIE;

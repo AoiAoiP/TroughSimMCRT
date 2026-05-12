@@ -1,4 +1,4 @@
-CMakeFiles/mcrt_sim.dir/src/main.cu.o : /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/src/main.cu \
+CMakeFiles/mcrt_sim.dir/src/main.cu.o : /home/wzy/diff-trough/Parabolic_Sim/src/main.cu \
     /usr/include/stdc-predef.h \
     /usr/local/cuda/bin/../targets/x86_64-linux/include/cuda_runtime.h \
     /usr/local/cuda/bin/../targets/x86_64-linux/include/crt/host_config.h \
@@ -189,9 +189,9 @@ CMakeFiles/mcrt_sim.dir/src/main.cu.o : /home/wzy/MCRT_ShapeFactors/Parabolic_Si
     /usr/include/c++/11/utility \
     /usr/include/c++/11/bits/stl_relops.h \
     /usr/include/c++/11/initializer_list \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/app.cuh \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/cu_math.cuh \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/config/trough_config.cuh \
+    /home/wzy/diff-trough/Parabolic_Sim/include/app.cuh \
+    /home/wzy/diff-trough/Parabolic_Sim/include/cu_math.cuh \
+    /home/wzy/diff-trough/Parabolic_Sim/include/config/trough_config.cuh \
     /usr/include/c++/11/iostream \
     /usr/include/c++/11/ostream \
     /usr/include/c++/11/ios \
@@ -288,7 +288,7 @@ CMakeFiles/mcrt_sim.dir/src/main.cu.o : /home/wzy/MCRT_ShapeFactors/Parabolic_Si
     /usr/include/x86_64-linux-gnu/c++/11/bits/basic_file.h \
     /usr/include/x86_64-linux-gnu/c++/11/bits/c++io.h \
     /usr/include/c++/11/bits/fstream.tcc \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/config/json.hpp \
+    /home/wzy/diff-trough/Parabolic_Sim/include/config/json.hpp \
     /usr/include/c++/11/algorithm \
     /usr/include/c++/11/bits/stl_algo.h \
     /usr/include/c++/11/bits/algorithmfwd.h \
@@ -379,10 +379,10 @@ CMakeFiles/mcrt_sim.dir/src/main.cu.o : /home/wzy/MCRT_ShapeFactors/Parabolic_Si
     /usr/include/c++/11/bits/stl_numeric.h \
     /usr/include/c++/11/pstl/glue_numeric_defs.h \
     /usr/include/c++/11/any \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/config/sun_config.cuh \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/config/absorber_config.cuh \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/config/sim_config.cuh \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/optics/sun_shape.cuh \
+    /home/wzy/diff-trough/Parabolic_Sim/include/config/sun_config.cuh \
+    /home/wzy/diff-trough/Parabolic_Sim/include/config/absorber_config.cuh \
+    /home/wzy/diff-trough/Parabolic_Sim/include/config/sim_config.cuh \
+    /home/wzy/diff-trough/Parabolic_Sim/include/optics/sun_shape.cuh \
     /usr/local/cuda/bin/../targets/x86_64-linux/include/curand_kernel.h \
     /usr/local/cuda/bin/../targets/x86_64-linux/include/nv/target \
     /usr/local/cuda/bin/../targets/x86_64-linux/include/nv/detail/__target_macros \
@@ -402,9 +402,9 @@ CMakeFiles/mcrt_sim.dir/src/main.cu.o : /home/wzy/MCRT_ShapeFactors/Parabolic_Si
     /usr/local/cuda/bin/../targets/x86_64-linux/include/curand_lognormal.h \
     /usr/local/cuda/bin/../targets/x86_64-linux/include/curand_poisson.h \
     /usr/local/cuda/bin/../targets/x86_64-linux/include/curand_discrete2.h \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/optics/surface_error.cuh \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/optics/random_pools.cuh \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/geometry/trough_intersect.cuh \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/geometry/geometry_func.cuh \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/geometry/absorber_intersect.cuh \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/postprocess/gaussian_filter.cuh
+    /home/wzy/diff-trough/Parabolic_Sim/include/optics/surface_error.cuh \
+    /home/wzy/diff-trough/Parabolic_Sim/include/optics/random_pools.cuh \
+    /home/wzy/diff-trough/Parabolic_Sim/include/geometry/trough_intersect.cuh \
+    /home/wzy/diff-trough/Parabolic_Sim/include/geometry/geometry_func.cuh \
+    /home/wzy/diff-trough/Parabolic_Sim/include/geometry/absorber_intersect.cuh \
+    /home/wzy/diff-trough/Parabolic_Sim/include/postprocess/gaussian_filter.cuh

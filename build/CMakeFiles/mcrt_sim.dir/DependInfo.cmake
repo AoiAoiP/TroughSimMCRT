@@ -8,12 +8,12 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/wzy/MCRT_ShapeFactors/Parabolic_Sim/src/absorber_config.cu" "CMakeFiles/mcrt_sim.dir/src/absorber_config.cu.o" "gcc" "CMakeFiles/mcrt_sim.dir/src/absorber_config.cu.o.d"
-  "/home/wzy/MCRT_ShapeFactors/Parabolic_Sim/src/main.cu" "CMakeFiles/mcrt_sim.dir/src/main.cu.o" "gcc" "CMakeFiles/mcrt_sim.dir/src/main.cu.o.d"
-  "/home/wzy/MCRT_ShapeFactors/Parabolic_Sim/src/random_pools.cu" "CMakeFiles/mcrt_sim.dir/src/random_pools.cu.o" "gcc" "CMakeFiles/mcrt_sim.dir/src/random_pools.cu.o.d"
-  "/home/wzy/MCRT_ShapeFactors/Parabolic_Sim/src/sim_config.cu" "CMakeFiles/mcrt_sim.dir/src/sim_config.cu.o" "gcc" "CMakeFiles/mcrt_sim.dir/src/sim_config.cu.o.d"
-  "/home/wzy/MCRT_ShapeFactors/Parabolic_Sim/src/sun_config.cu" "CMakeFiles/mcrt_sim.dir/src/sun_config.cu.o" "gcc" "CMakeFiles/mcrt_sim.dir/src/sun_config.cu.o.d"
-  "/home/wzy/MCRT_ShapeFactors/Parabolic_Sim/src/trough_config.cu" "CMakeFiles/mcrt_sim.dir/src/trough_config.cu.o" "gcc" "CMakeFiles/mcrt_sim.dir/src/trough_config.cu.o.d"
+  "/home/wzy/diff-trough/Parabolic_Sim/src/absorber_config.cu" "CMakeFiles/mcrt_sim.dir/src/absorber_config.cu.o" "gcc" "CMakeFiles/mcrt_sim.dir/src/absorber_config.cu.o.d"
+  "/home/wzy/diff-trough/Parabolic_Sim/src/main.cu" "CMakeFiles/mcrt_sim.dir/src/main.cu.o" "gcc" "CMakeFiles/mcrt_sim.dir/src/main.cu.o.d"
+  "/home/wzy/diff-trough/Parabolic_Sim/src/random_pools.cu" "CMakeFiles/mcrt_sim.dir/src/random_pools.cu.o" "gcc" "CMakeFiles/mcrt_sim.dir/src/random_pools.cu.o.d"
+  "/home/wzy/diff-trough/Parabolic_Sim/src/sim_config.cu" "CMakeFiles/mcrt_sim.dir/src/sim_config.cu.o" "gcc" "CMakeFiles/mcrt_sim.dir/src/sim_config.cu.o.d"
+  "/home/wzy/diff-trough/Parabolic_Sim/src/sun_config.cu" "CMakeFiles/mcrt_sim.dir/src/sun_config.cu.o" "gcc" "CMakeFiles/mcrt_sim.dir/src/sun_config.cu.o.d"
+  "/home/wzy/diff-trough/Parabolic_Sim/src/trough_config.cu" "CMakeFiles/mcrt_sim.dir/src/trough_config.cu.o" "gcc" "CMakeFiles/mcrt_sim.dir/src/trough_config.cu.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

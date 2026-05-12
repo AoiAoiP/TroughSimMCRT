@@ -11,6 +11,19 @@ __global__ void render(float* d_flux_map,int* d_hit_count){
     int mirror_index;
     float3 ray_origin = Geometry::sampleTrough(rand_origin.x,rand_origin.y,d_trough_config,mirror_index);
     float3 normal_ideal = normalize(make_float3(-ray_origin.x/(2.0f*f),0.0f,1.0f));
+    float torsion_rad = Geometry::computeTorsionAngle(ray_origin.y, d_trough_config.torsion_error);
+    float3 normal_torsion;
+    if (fabsf(torsion_rad) > 1e-9f) {
+        float sin_t, cos_t;
+        sincosf(torsion_rad, &sin_t, &cos_t);
+        normal_torsion = make_float3(
+            normal_ideal.x * cos_t + normal_ideal.z * sin_t,
+            normal_ideal.y,
+            -normal_ideal.x * sin_t + normal_ideal.z * cos_t
+        );
+    } else {
+        normal_torsion = normal_ideal;
+    }
 
     // get ray_in
     float2 rand_sun = Optics::get_random_pair(idx,DIM_SUN_SHAPE);
@@ -26,7 +39,7 @@ __global__ void render(float* d_flux_map,int* d_hit_count){
     ray_in = -ray_in;
 
     // get ray_ref
-    float3 ray_ref_ideal = reflect(ray_in,normal_ideal);   
+    float3 ray_ref_ideal = reflect(ray_in, normal_torsion);
     float sigma_total = sqrtf(4*d_trough_config.slope_error*d_trough_config.slope_error+d_trough_config.specularity_error*d_trough_config.specularity_error)*0.001f; // transfer mrad to rad
     float2 rand_pert = Optics::get_random_pair(idx,DIM_PERT_ERR);
     float3 ray_ref = normalize(Optics::GaussianPerturb(ray_ref_ideal,sigma_total,rand_pert.x,rand_pert.y));
@@ -46,18 +59,18 @@ __global__ void render(float* d_flux_map,int* d_hit_count){
         int grid_index = bin_z * d_sim_config.grid_res_x + bin_x;
 #ifdef DEBUG
         if(idx < 1e2)
-            printf("idx=%ld,ray_origin=(%.4f,%.4f,%.4f),normal_ideal=(%.4f,%.4f,%.4f),ray_in=(%.4f,%.4f,%.4f),ray_ref=(%.4f,%.4f,%.4f),hit_point=(%.4f,%.4f,%.4f)\n",
-                idx,ray_origin.x,ray_origin.y,ray_origin.z,normal_ideal.x,normal_ideal.y,normal_ideal.z,ray_in.x,ray_in.y,ray_in.z,ray_ref_ideal.x,ray_ref_ideal.y,ray_ref_ideal.z,hit.hit_point.x,hit.hit_point.y,hit.hit_point.z);
+            printf("idx=%ld,ray_origin=(%.4f,%.4f,%.4f),normal=(%.4f,%.4f,%.4f),ray_in=(%.4f,%.4f,%.4f),ray_ref=(%.4f,%.4f,%.4f),hit_point=(%.4f,%.4f,%.4f)\n",
+                idx,ray_origin.x,ray_origin.y,ray_origin.z,normal_torsion.x,normal_torsion.y,normal_torsion.z,ray_in.x,ray_in.y,ray_in.z,ray_ref_ideal.x,ray_ref_ideal.y,ray_ref_ideal.z,hit.hit_point.x,hit.hit_point.y,hit.hit_point.z);
 #endif   
         atomicAdd(&d_flux_map[grid_index],  d_trough_config.reflectivity);
     }
 }
 
 int main(){
-    ParabolicTroughConfig h_trough_config = loadTroughConfigToGPU("../resources/config.json");
-    SunConfig h_sun_config = loadSunConfigToGPU("../resources/config.json");
-    AbsorberConfig h_absorber_config = loadAbsorberConfigToGPU("../resources/config.json");
-    SimConfig h_sim_config = loadSimConfigToGPU("../resources/config.json");
+    ParabolicTroughConfig h_trough_config = loadTroughConfigToGPU("../resources/Nevada_Solar_One/config.json");
+    SunConfig h_sun_config = loadSunConfigToGPU("../resources/Nevada_Solar_One/config.json");
+    AbsorberConfig h_absorber_config = loadAbsorberConfigToGPU("../resources/Nevada_Solar_One/config.json");
+    SimConfig h_sim_config = loadSimConfigToGPU("../resources/Nevada_Solar_One/config.json");
 
     int N = h_sim_config.total_rays;
     int blockSize = h_sim_config.block_size;

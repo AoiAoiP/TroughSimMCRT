@@ -1,4 +1,4 @@
-CMakeFiles/mcrt_sim.dir/src/random_pools.cu.o : /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/src/random_pools.cu \
+CMakeFiles/mcrt_sim.dir/src/random_pools.cu.o : /home/wzy/diff-trough/Parabolic_Sim/src/random_pools.cu \
     /usr/include/stdc-predef.h \
     /usr/local/cuda/bin/../targets/x86_64-linux/include/cuda_runtime.h \
     /usr/local/cuda/bin/../targets/x86_64-linux/include/crt/host_config.h \
@@ -189,7 +189,7 @@ CMakeFiles/mcrt_sim.dir/src/random_pools.cu.o : /home/wzy/MCRT_ShapeFactors/Para
     /usr/include/c++/11/utility \
     /usr/include/c++/11/bits/stl_relops.h \
     /usr/include/c++/11/initializer_list \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/optics/random_pools.cuh \
+    /home/wzy/diff-trough/Parabolic_Sim/include/optics/random_pools.cuh \
     /usr/local/cuda/bin/../targets/x86_64-linux/include/curand_kernel.h \
     /usr/local/cuda/bin/../targets/x86_64-linux/include/nv/target \
     /usr/local/cuda/bin/../targets/x86_64-linux/include/nv/detail/__target_macros \

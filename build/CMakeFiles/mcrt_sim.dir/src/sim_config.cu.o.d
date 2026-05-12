@@ -1,4 +1,4 @@
-CMakeFiles/mcrt_sim.dir/src/sim_config.cu.o : /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/src/sim_config.cu \
+CMakeFiles/mcrt_sim.dir/src/sim_config.cu.o : /home/wzy/diff-trough/Parabolic_Sim/src/sim_config.cu \
     /usr/include/stdc-predef.h \
     /usr/local/cuda/bin/../targets/x86_64-linux/include/cuda_runtime.h \
     /usr/local/cuda/bin/../targets/x86_64-linux/include/crt/host_config.h \
@@ -189,7 +189,7 @@ CMakeFiles/mcrt_sim.dir/src/sim_config.cu.o : /home/wzy/MCRT_ShapeFactors/Parabo
     /usr/include/c++/11/utility \
     /usr/include/c++/11/bits/stl_relops.h \
     /usr/include/c++/11/initializer_list \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/config/sim_config.cuh \
+    /home/wzy/diff-trough/Parabolic_Sim/include/config/sim_config.cuh \
     /usr/include/c++/11/iostream \
     /usr/include/c++/11/ostream \
     /usr/include/c++/11/ios \
@@ -293,7 +293,7 @@ CMakeFiles/mcrt_sim.dir/src/sim_config.cu.o : /home/wzy/MCRT_ShapeFactors/Parabo
     /usr/include/c++/11/bits/vector.tcc \
     /usr/include/c++/11/sstream \
     /usr/include/c++/11/bits/sstream.tcc \
-    /home/wzy/MCRT_ShapeFactors/Parabolic_Sim/include/config/json.hpp \
+    /home/wzy/diff-trough/Parabolic_Sim/include/config/json.hpp \
     /usr/include/c++/11/algorithm \
     /usr/include/c++/11/bits/stl_algo.h \
     /usr/include/c++/11/bits/algorithmfwd.h \

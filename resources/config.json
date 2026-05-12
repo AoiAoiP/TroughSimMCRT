@@ -33,8 +33,25 @@
         ],
         "width": 8.61502,
         "reflectivity": 0.92,
-        "slope_error": 2.0,
-        "specularity_error": 2.5,
+        "slope_error": 0,
+        "specularity_error": 0,
+        "torsion_error": {
+            "type": "lookup",
+            "y_positions": [
+                0.0,
+                0.5,
+                1.0,
+                1.5,
+                1.8
+            ],
+            "torsion_values": [
+                30.0,
+                30.0,
+                30.0,
+                30.0,
+                30.0
+            ]
+        },
         "bounds": [
             [
                 -4.30751,

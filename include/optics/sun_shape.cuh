@@ -31,6 +31,9 @@ namespace Optics{
         float theta = 0.0f;
         float phi = PI * 2.0f * u2;
         switch(config.sunshape){
+            case SunShapeType::NONE:
+                theta = 0.0f;
+                break;
             case SunShapeType::UNIFORM:
                 theta = config.params.theta_max*0.001f * sqrtf(u1);
                 break;
@@ -74,7 +77,6 @@ namespace Optics{
         );
 
         // compute sin/cos components
-        float sin_theta, cos_theta;
         float sin_theta, cos_theta;
         sincosf(theta, &sin_theta, &cos_theta);
         float sin_phi, cos_phi;

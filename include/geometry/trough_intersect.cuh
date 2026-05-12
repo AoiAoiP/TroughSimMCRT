@@ -96,4 +96,32 @@ namespace Geometry{
         return rec;
     }
 
+    inline __device__ float computeTorsionAngle(float y, const TorsionErrorConfig& config){
+        switch(config.type){
+            case TorsionErrorConfig::NONE: return 0.0f;
+            case TorsionErrorConfig::POLYNOMIAL:
+                return (config.coefficients[0] + y * (config.coefficients[1] + y * config.coefficients[2])) * 0.001f;
+            case TorsionErrorConfig::LOOKUP:
+            {
+                float* y_pos = config.y_pos;
+                float* tors = config.torsion_values;
+                int N = config.table_size;
+
+                if (N < 2 || y <= y_pos[0]) return tors[0] * 0.001f;
+                if (y >= y_pos[N - 1]) return tors[N - 1] * 0.001f;
+
+                int lo = 0, hi = N - 1;
+                while (hi - lo > 1) {
+                    int mid = (lo + hi) >> 1;
+                    if (y_pos[mid] <= y) lo = mid;
+                    else hi = mid;
+                }
+
+                float t = (y - y_pos[lo]) / (y_pos[hi] - y_pos[lo]);
+                return (tors[lo] + t * (tors[hi] - tors[lo])) * 0.001f;
+            }
+            default: return 0.0f;
+        }
+    }
+
 } // namespace Geometry
